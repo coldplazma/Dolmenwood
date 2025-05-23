@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dolmenwood Adventuring Party Generator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .dolmenwood-header {
+            font-family: 'Georgia', 'Times New Roman', serif; /* Evocative of fantasy books */
+        }
+        .card {
+            border: 1px solid #a3a3a3; /* stone-400 */
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        .stat-block dt {
+            font-weight: 600;
+            color: #57534e; /* stone-600 */
+        }
+        .stat-block dd {
+            color: #44403c; /* stone-700 */
+        }
+        .kindred-trait {
+            font-style: italic;
+            color: #78716c; /* stone-500 */
+        }
+        /* Dolmenwood-inspired color palette */
+        .dw-bg-page { background-color: #fef3c7; /* amber-100 - parchment like */ }
+        .dw-bg-card { background-color: #fffbeb; /* amber-50 - lighter parchment */ }
+        .dw-text-title { color: #451a03; /* amber-900 - dark brown for titles */ }
+        .dw-text-primary { color: #78350f; /* amber-800 - primary text */ }
+        .dw-text-secondary { color: #92400e; /* amber-700 - secondary text */ }
+        .dw-button {
+            background-color: #052e16; /* emerald-900 - deep forest green */
+            color: #ecfdf5; /* emerald-50 */
+            transition: background-color 0.3s ease;
+        }
+        .dw-button:hover {
+            background-color: #064e3b; /* emerald-800 */
+        }
+        .dw-border { border-color: #7c2d12; /* amber-800 */ }
+    </style>
+</head>
+<body class="dw-bg-page min-h-screen p-4 sm:p-8">
+    <div class="container mx-auto max-w-5xl">
+        <header class="text-center mb-8">
+            <h1 class="text-3xl sm:text-4xl font-bold dw-text-title dolmenwood-header">Dolmenwood Adventuring Party Generator</h1>
+            <p class="text-sm dw-text-secondary mt-2">Generate brave (or foolish) souls to wander the eerie paths of Dolmenwood.</p>
+        </header>
+
+        <div class="text-center mb-8">
+            <button id="generatePartyButton" class="dw-button font-semibold py-3 px-6 rounded-lg shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-opacity-75 text-lg">
+                Generate New Party
+            </button>
+        </div>
+
+        <div id="partyDisplay" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            </div>
+    </div>
+
+    <script>
+        // --- DATA DEFINITIONS ---
+        // (Data for kindredsData, adventurerStats, kindredRollTable would be extensive here)
+        // For brevity in this example, only a subset is shown. The full data would include all kindreds and classes from pages 104-108.
+
+        const kindredRollTable = [
+            { range: [1, 3], kindredKey: "Breggle" }, { range: [4, 4], kindredKey: "Elf" },
+            { range: [5, 5], kindredKey: "Grimalkin" }, { range: [6, 10], kindredKey: "Human" },
+            { range: [11, 11], kindredKey: "Mossling" }, { range: [12, 12], kindredKey: "Woodgrue" }
+        ];
+
+        const kindredsData = {
+            "Human": {
+                name: "Human",
+                traits: ["Act first on tied initiative."],
+                classDistribution: [
+                    { range: [1, 2], classKey: "Bard" }, { range: [3, 5], classKey: "Cleric" },
+                    { range: [6, 6], classKey: "Enchanter" }, { range: [7, 10], classKey: "Fighter" },
+                    { range: [11, 12], classKey: "Friar" }, { range: [13, 14], classKey: "Hunter" },
+                    { range: [15, 16], classKey: "Knight" }, { range: [17, 18], classKey: "Magician" },
+                    { range: [19, 20], classKey: "Thief" }
+                ]
+            },
+            "Elf": {
+                name: "Elf",
+                traits: ["Random glamour.", "+2 Magic Resistance.", "Vulnerable to cold iron (+1 damage)."],
+                classDistribution: [
+                    { range: [1, 2], classKey: "Bard" }, { range: [3, 8], classKey: "Enchanter" },
+                    { range: [9, 12], classKey: "Fighter" }, { range: [13, 15], classKey: "Hunter" },
+                    { range: [16, 17], classKey: "Magician" }, { range: [18, 20], classKey: "Thief" }
+                ]
+            },
+             "Breggle": {
+                name: "Breggle",
+                traits: ["+1 AC in Light or no armour (base AC may vary).", "Horns attack: 1d4 damage (L1), 1d4+1 damage (L3/5).", "Gaze attack once a day (L5 only)."],
+                classDistribution: [
+                    { range: [1, 1], classKey: "Bard" }, { range: [2, 2], classKey: "Cleric" },
+                    { range: [3, 3], classKey: "Enchanter" }, { range: [4, 8], classKey: "Fighter" },
+                    { range: [9, 9], classKey: "Friar" }, { range: [10, 11], classKey: "Hunter" },
+                    { range: [12, 15], classKey: "Knight" }, { range: [16, 18], classKey: "Magician" },
+                    { range: [19, 20], classKey: "Thief" }
+                ]
+            },
+            "Grimalkin": {
+                name: "Grimalkin",
+                traits: ["+2 AC versus Large creatures.", "Random glamour.", "+2 Magic Resistance.", "Can change into Chester (domestic cat) and Wilder (primal fey predator) forms.", "Vulnerable to cold iron (+1 damage)."],
+                classDistribution: [
+                     { range: [1, 4], classKey: "Bard" }, { range: [5, 8], classKey: "Enchanter" },
+                     { range: [9, 10], classKey: "Fighter" }, { range: [11, 14], classKey: "Hunter" },
+                     { range: [15, 16], classKey: "Magician" }, { range: [17, 20], classKey: "Thief" }
+                ]
+            },
+            "Mossling": {
+                name: "Mossling",
+                traits: ["Random knack.", "+4 to Saving Throws versus fungal spores or poisons; +2 bonus to all other Saving Throws."],
+                classDistribution: [
+                    { range: [1, 3], classKey: "Bard" }, { range: [4, 4], classKey: "Enchanter" },
+                    { range: [5, 10], classKey: "Fighter" }, { range: [11, 16], classKey: "Hunter" },
+                    { range: [17, 17], classKey: "Magician" }, { range: [18, 20], classKey: "Thief" }
+                ]
+            },
+            "Woodgrue": {
+                name: "Woodgrue",
+                traits: ["Moon sight to 60ft.", "+2 AC versus Large creatures.", "Mad revelry once a day.", "Vulnerable to cold iron (+1 damage)."],
+                classDistribution: [
+                    { range: [1, 5], classKey: "Bard" }, { range: [6, 8], classKey: "Enchanter" },
+                    { range: [9, 10], classKey: "Fighter" }, { range: [11, 14], classKey: "Hunter" },
+                    { range: [15, 16], classKey: "Magician" }, { range: [17, 20], classKey: "Thief" }
+                ]
+            }
+        };
+
+        const adventurerStats = {
+            "Fighter": {
+                name: "Fighter",
+                levels: {
+                    1: { title: "Soldier", AC: 15, HP: "1d8 (4)", Saves: {D:12, R:13, H:14, B:15, S:16}, AttackDetails: "Weapon (+1)", Speed: 20, Morale: 7, XP: 10, Gear: ["Chainmail + shield", "Longsword (1d8)", "Shortbow + 20 arrows (1d6)"], Abilities: [] },
+                    3: { title: "Lieutenant", AC: 17, HP: "3d8 (13)", Saves: {D:11, R:12, H:13, B:14, S:15}, AttackDetails: "Weapon (+2)", Speed: 20, Morale: 8, XP: 40, Gear: ["Plate mail + shield", "Longsword (1d8)", "Shortbow + 20 arrows (1d6)", "Orgon’s Scintillating Philtre"], Abilities: ["Combat talent: Cleave"] },
+                    5: { title: "Captain", AC: 19, HP: "5d8 (22)", Saves: {D:10, R:11, H:12, B:13, S:14}, AttackDetails: "Weapon (+3)", Speed: 20, Morale: 9, XP: 260, Gear: ["Plate mail + Arcane Shield", "Fairy Longsword (1d8+2, +2 Attack)", "Shortbow + 20 arrows (1d6)", "Prismatic Elixir", "Wereform Elixir"], Abilities: ["Combat talent: Leader"] }
+                }
+            },
+            "Bard": {
+                name: "Bard",
+                levels: {
+                    1: { title: "Rhymer", AC: 12, HP: "1d6 (3)", Saves: {D:13, R:14, H:13, B:15, S:15}, AttackDetails: "Weapon (+0)", Speed: 30, Morale: 7, XP: 15, Gear: ["Leather armour", "Shortsword (1d6)", "Sling + 20 stones (1d4)"], Abilities: ["Counter charm", "Enchantment (1/day—mortals)", "Skills: Decipher Documents 6, Legerdemain 6, Listen 5, Monster Lore 5"] },
+                    3: { title: "Troubadour", AC: 14, HP: "3d6 (10)", Saves: {D:12, R:13, H:12, B:14, S:14}, AttackDetails: "Weapon (+1)", Speed: 20, Morale: 8, XP: 65, Gear: ["Chainmail", "Shortsword (1d6)", "Silver dagger (1d4)", "Shortbow + 20 arrows (1d4)", "Vaporous Spirits"], Abilities: ["Counter charm", "Enchantment (3/day—mortals)", "Skills: Decipher Documents 5, Legerdemain 6, Listen 5, Monster Lore 4"] },
+                    5: { title: "Lore-Master", AC: 15, HP: "5d6 (17)", Saves: {D:11, R:12, H:11, B:13, S:13}, AttackDetails: "Weapon (+2)", Speed: 20, Morale: 9, XP: 360, Gear: ["Chainmail + shield", "Arcane Shortsword (1d6+2, +2 Attack)", "Silver dagger (1d4)", "Shortbow + 20 arrows (1d4)", "Lute of Obscurement", "Prismatic Elixir"], Abilities: ["Counter charm", "Enchantment (5/day—animals, demi-fey, mortals)", "Skills: Decipher Documents 5, Legerdemain 5, Listen 4, Monster Lore 4"] }
+                }
+            },
+            "Cleric": {
+                name: "Cleric",
+                levels: {
+                    1: { title: "Acolyte", AC: 15, HP: "1d6 (3)", Saves: {D:11, R:12, H:13, B:16, S:14}, AttackDetails: "Weapon (+0)", Speed: 20, Morale: 8, XP: 10, Gear: ["Chainmail + shield", "Longsword (1d8)", "Shortbow + 20 arrows (1d6)"], Abilities: ["Turn Undead"] },
+                    3: { title: "Warden", AC: 17, HP: "3d6 (10)", Saves: {D:10, R:11, H:12, B:15, S:13}, AttackDetails: "Weapon (+1)", Speed: 20, Morale: 9, XP: 65, Gear: ["Plate mail + shield", "Longsword (1d8)", "Shortbow + 20 arrows (1d6)", "Vial of holy water"], Abilities: ["Turn Undead", "Spells: Lesser Healing, Mantle of Protection", "Holy Order specific ability (e.g., St Faxis: +2 saves vs arcane)"] },
+                    5: { title: "Elder", AC: 19, HP: "5d6 (17)", Saves: {D:9, R:10, H:11, B:14, S:12}, AttackDetails: "Weapon (+2)", Speed: 20, Morale: 10, XP: 360, Gear: ["Plate mail + Holy Shield", "Holy Longsword (1d8+2, +2 Attack)", "Shortbow + 20 arrows (1d6)", "3 vials of holy water", "Prismatic Elixir", "Scroll of Cure Affliction"], Abilities: ["Turn Undead", "Spells: Lesser Healing, Light, Bless, Hold Person", "Holy Order specific ability"] }
+                }
+            },
+            "Enchanter": {
+                name: "Enchanter",
+                levels: {
+                    1: { title: "Wanderer", AC: 12, HP: "1d6 (3)", Saves: {D:11, R:12, H:13, B:16, S:14}, AttackDetails: "Weapon (+0)", Speed: 30, Morale: 7, XP: 15, Gear: ["Leather armour", "Shortsword (1d6)"], Abilities: ["Magic: Beguilement, Rune of Vanishing (1/day)", "Skills: Detect Magic 5"] },
+                    3: { title: "Beguiler", AC: 14, HP: "3d6 (10)", Saves: {D:10, R:11, H:12, B:15, S:13}, AttackDetails: "Weapon (+1)", Speed: 20, Morale: 8, XP: 90, Gear: ["Chainmail", "Longsword (1d8)", "Fairy Dagger (1d4+2, +2 Attack)", "Bottled Light"], Abilities: ["Magic: Fool’s Gold, Forgetting, Subtle Sight. Deathly Blossom (1/day), Gust of Wind (1/day), Proof Against Deadly Harm (1/day)", "Skills: Detect Magic 5"] },
+                    5: { title: "Bewitcher", AC: 14, HP: "5d6 (17)", Saves: {D:9, R:10, H:11, B:14, S:12}, AttackDetails: "Weapon (+2)", Speed: 20, Morale: 9, XP: 460, Gear: ["Chainmail", "Longsword (1d8)", "Fairy Dagger (1d4+2, +2 Attack)", "Liquid Time", "Wand of Phantasm (10 charges)"], Abilities: ["Magic: Awe, Cloak of Darkness, Disguise Object, Masquerade. Fog Cloud (2/day), Gust of Wind (2/day), Sway the Mortal Mind (2/day), Arcane Unbinding (1/week), Fairy Gold (1/week)", "Skills: Detect Magic 4"] }
+                }
+            },
+            "Friar": {
+                name: "Friar",
+                levels: {
+                    1: { title: "Mendicant", AC: 12, HP: "1d4 (2)", Saves: {D:11, R:12, H:13, B:16, S:14}, AttackDetails: "Weapon (+0)", Speed: 40, Morale: 7, XP: 15, Gear: ["Staff (1d4)"], Abilities: ["Spells: Lesser Healing"] },
+                    3: { title: "Preacher", AC: 12, HP: "3d4 (7)", Saves: {D:11, R:12, H:13, B:16, S:14}, AttackDetails: "Weapon (+0)", Speed: 40, Morale: 8, XP: 65, Gear: ["Staff (1d4)", "Sling + 20 stones (1d4)", "Vial of holy water", "Scroll of Holy Light"], Abilities: ["Spells: Detect Evil, Lesser Healing, Speak With Animals"] },
+                    5: { title: "Healer", AC: 13, HP: "5d4 (12)", Saves: {D:10, R:11, H:12, B:15, S:13}, AttackDetails: "Weapon (+1)", Speed: 40, Morale: 9, XP: 460, Gear: ["Holy Staff (1d4+2, +2 Attack)", "Sling + 20 stones (1d4)", "2 vials of holy water", "Scroll of Remove Poison", "Rod of Silence (5 charges)"], Abilities: ["Spells: Detect Magic, Lesser Healing, Mantle of Protection, Bless, Reveal Alignment, Holy Light"] }
+                }
+            },
+            "Hunter": {
+                name: "Hunter",
+                levels: {
+                    1: { title: "Guide", AC: 12, HP: "1d8 (4)", Saves: {D:12, R:13, H:14, B:15, S:16}, AttackDetails: "Weapon (+1)", Speed: 30, Morale: 7, XP: 10, Gear: ["Leather armour", "Shortsword (1d6)", "Longbow + 20 arrows (1d6)"], Abilities: ["Skills: Alertness 6, Stalking 6, Survival 5, Tracking 5", "Companion: Spookhound (stats not detailed here)"] },
+                    3: { title: "Pathfinder", AC: 15, HP: "3d8 (13)", Saves: {D:11, R:12, H:13, B:14, S:15}, AttackDetails: "Weapon (+2)", Speed: 30, Morale: 8, XP: 40, Gear: ["Leather armour + Arcane Shield", "Shortsword (1d6)", "Longbow + 20 arrows (1d6)", "Wyrmsblood Elixir"], Abilities: ["Skills: Alertness 6, Stalking 6, Survival 4, Tracking 4", "Companion: Lankston mastiff (stats not detailed here)"] },
+                    5: { title: "Strider", AC: 15, HP: "5d8 (22)", Saves: {D:10, R:11, H:12, B:13, S:14}, AttackDetails: "Weapon (+3)", Speed: 30, Morale: 9, XP: 260, Gear: ["Leather armour + Arcane Shield", "Shortsword (1d6)", "Fairy Longbow + 20 arrows (1d6+2, +2 Attack)", "Hunter’s Balm", "Elixir of Mutability"], Abilities: ["Skills: Alertness 5, Stalking 5, Survival 4, Tracking 4", "Companion: Bear (stats not detailed here)"] }
+                }
+            },
+            "Knight": {
+                name: "Knight",
+                levels: {
+                    1: { title: "Squire", AC: 17, HP: "1d8 (4)", Saves: {D:12, R:13, H:12, B:15, S:15}, AttackDetails: "Weapon (+1)", Speed: 20, Morale: 8, XP: 10, Gear: ["Plate mail + shield", "Longsword (1d8)"], Abilities: [] },
+                    3: { title: "Armiger", AC: 19, HP: "3d8 (13)", Saves: {D:11, R:12, H:11, B:14, S:14}, AttackDetails: "Weapon (+2)", Speed: 20, Morale: 9, XP: 40, Gear: ["Arcane Plate Mail + shield", "Longsword (1d8)", "Lance (1d6)", "Alchemical Tonic"], Abilities: ["Companion: Charger (stats not detailed here)"] },
+                    5: { title: "Gallant", AC: 19, HP: "5d8 (22)", Saves: {D:10, R:11, H:10, B:13, S:13}, AttackDetails: "Weapon (+3)", Speed: 20, Morale: 10, XP: 260, Gear: ["Arcane Plate Mail + shield", "Longsword (1d8)", "Holy Lance (1d6+2, +2 Attack)", "Prismatic Elixir"], Abilities: ["Companion: Charger (stats not detailed here)"] }
+                }
+            },
+            "Magician": {
+                name: "Magician",
+                levels: {
+                    1: { title: "Apprentice", AC: 10, HP: "1d4 (2)", Saves: {D:14, R:14, H:13, B:16, S:14}, AttackDetails: "Weapon (+0)", Speed: 40, Morale: 7, XP: 15, Gear: ["Staff (1d4)"], Abilities: ["Spells: Vapours of Dream", "Skills: Detect Magic 6"] },
+                    3: { title: "Conjurer", AC: 10, HP: "3d4 (7)", Saves: {D:14, R:14, H:13, B:16, S:14}, AttackDetails: "Weapon (+0)", Speed: 40, Morale: 8, XP: 90, Gear: ["Staff (1d4)", "Silver dagger (1d4)", "Scroll of Dispel Magic"], Abilities: ["Spells: Fairy Servant, Ioun Shard, Phantasm", "Skills: Detect Magic 5"] },
+                    5: { title: "Wizard", AC: 10, HP: "5d4 (12)", Saves: {D:13, R:13, H:12, B:15, S:13}, AttackDetails: "Weapon (+1)", Speed: 40, Morale: 9, XP: 460, Gear: ["Arcane Staff (1d4+2, +2 Attack)", "Silver dagger (1d4)", "Scrolls of Knock and Fireball", "Staff of Rainbow Hues (10 charges)"], Abilities: ["Spells: Glyph of Sealing, Ingratiate, Dweomerlight, Flaming Spirit, Circle of Invisibility", "Skills: Detect Magic 5"] }
+                }
+            },
+            "Thief": {
+                name: "Thief",
+                levels: {
+                    1: { title: "Footpad", AC: 12, HP: "1d4 (2)", Saves: {D:13, R:14, H:13, B:15, S:15}, AttackDetails: "Weapon (+0)", Speed: 30, Morale: 7, XP: 15, Gear: ["Leather armour", "Longsword (1d8)", "3 daggers (1d4)"], Abilities: ["Back-stab: +4 Attack with dagger, 3d4 damage", "Skills: Climb Walls 4, Decipher Documents 6, Disarm Traps 6, Legerdemain 6, Listen 6, Pick Locks 5, Search 6, Stealth 5"] },
+                    3: { title: "Robber", AC: 14, HP: "3d4 (7)", Saves: {D:12, R:13, H:12, B:14, S:14}, AttackDetails: "Weapon (+1)", Speed: 30, Morale: 8, XP: 65, Gear: ["Fairy Leather Armour", "Longsword (1d8)", "3 silver daggers (1d4)", "Vanishing Philtre"], Abilities: ["Back-stab: +4 Attack with dagger, 3d4 damage", "Skills: Climb Walls 4, Decipher Documents 6, Disarm Traps 5, Legerdemain 5, Listen 5, Pick Locks 5, Search 5, Stealth 5"] },
+                    5: { title: "Leader", AC: 14, HP: "5d4 (12)", Saves: {D:11, R:12, H:11, B:13, S:13}, AttackDetails: "Weapon (+2)", Speed: 30, Morale: 9, XP: 360, Gear: ["Fairy Leather Armour", "Arcane Shortsword (1d6+2, +2 Attack)", "3 silver daggers (1d4)", "Liquid Time", "Orgon’s Scintillating Philtre"], Abilities: ["Back-stab: +4 Attack with dagger, 3d4 damage", "Skills: Climb Walls 3, Decipher Documents 5, Disarm Traps 5, Legerdemain 5, Listen 5, Pick Locks 4, Search 5, Stealth 4"] }
+                }
+            }
+        };
+        
+        // Placeholder names for variety
+        const firstNames = ["Elara", "Borin", "Lyra", "Finn", "Astrid", "Rowan", "Jasper", "Willow", "Corbin", "Seraphina"];
+        const lastNames = ["Blackwood", "Stonehand", "Whisperwind", "Ironhew", "Moonbrook", "Shadowwalker", "Oakhart", "Riverbend", "Grimshaw", "Silvermane"];
+
+        // --- UTILITY FUNCTIONS ---
+        function d(sides) { return Math.floor(Math.random() * sides) + 1; }
+        function roll(diceString) { // e.g., "1d4+4" or "1d6"
+            if (typeof diceString === 'number') return diceString;
+            const parts = diceString.match(/(\d+)d(\d+)([\+\-]\d+)?/);
+            if (!parts) return 0;
+            const numDice = parseInt(parts[1]);
+            const sides = parseInt(parts[2]);
+            const modifier = parts[3] ? parseInt(parts[3]) : 0;
+            let total = 0;
+            for (let i = 0; i < numDice; i++) {
+                total += d(sides);
+            }
+            return total + modifier;
+        }
+
+        function getRandomName() {
+            return firstNames[Math.floor(Math.random() * firstNames.length)] + " " + lastNames[Math.floor(Math.random() * lastNames.length)];
+        }
+        
+        function formatSaves(savesObj, kindredName = "") {
+            let modifiedSaves = {...savesObj};
+            if (kindredName === "Mossling") {
+                for (const key in modifiedSaves) {
+                    modifiedSaves[key] -= 2; // Apply +2 bonus (lower is better)
+                }
+            }
+            return `D:${modifiedSaves.D} R:${modifiedSaves.R} H:${modifiedSaves.H} B:${modifiedSaves.B} S:${modifiedSaves.S}`;
+        }
+
+
+        // --- CORE LOGIC ---
+        function generateAdventurer(partyLevelTier) {
+            // 1. Determine Kindred
+            const kindredRoll = d(12);
+            let kindredKey = "Human"; // Default
+            for (const entry of kindredRollTable) {
+                if (kindredRoll >= entry.range[0] && kindredRoll <= entry.range[1]) {
+                    kindredKey = entry.kindredKey;
+                    break;
+                }
+            }
+            const kindred = kindredsData[kindredKey];
+
+            // 2. Determine Class based on Kindred
+            const classRoll = d(20);
+            let classKey = "Fighter"; // Default
+            for (const entry of kindred.classDistribution) {
+                if (classRoll >= entry.range[0] && classRoll <= entry.range[1]) {
+                    classKey = entry.classKey;
+                    break;
+                }
+            }
+            // Handle cases where a class might not be available for a kindred (though the tables seem comprehensive for adventurers)
+            if (!adventurerStats[classKey]) {
+                console.warn(`Class ${classKey} not found for Kindred ${kindred.name}, defaulting to Fighter.`);
+                classKey = "Fighter"; 
+            }
+            const adventurerClass = adventurerStats[classKey];
+            
+            // 3. Determine Level (Simplified: all party members are L1, L3, or L5 based on tier)
+            const level = partyLevelTier;
+            const stats = adventurerClass.levels[level];
+
+            if (!stats) {
+                console.error(`Stats not found for ${adventurerClass.name} Level ${level}. Defaulting to Level 1.`);
+                return { ...adventurerClass.levels[1], name: getRandomName(), kindred: kindred.name, kindredTraits: kindred.traits, className: adventurerClass.name, level: 1, savesString: formatSaves(adventurerClass.levels[1].Saves, kindred.name) };
+            }
+            
+            // Adjust saves for Mossling
+            const savesString = formatSaves(stats.Saves, kindred.name);
+
+            // Add Breggle Horns/Gaze as abilities if applicable
+            let finalAbilities = [...stats.Abilities];
+            if (kindred.name === "Breggle") {
+                finalAbilities.push(kindred.traits[1]); // Horns attack
+                if (level === 5 && kindred.traits[2]) {
+                     finalAbilities.push(kindred.traits[2]); // Gaze attack
+                }
+            }
+
+
+            return {
+                name: getRandomName(),
+                kindred: kindred.name,
+                kindredTraits: kindred.traits,
+                className: adventurerClass.name,
+                level: level,
+                title: stats.title,
+                AC: stats.AC,
+                HP: stats.HP,
+                Saves: savesString, // This is now the formatted string
+                AttackDetails: stats.AttackDetails,
+                Speed: stats.Speed,
+                Morale: stats.Morale,
+                XP: stats.XP,
+                Gear: stats.Gear,
+                Abilities: finalAbilities
+            };
+        }
+
+        function generateParty() {
+            const partyDisplay = document.getElementById('partyDisplay');
+            partyDisplay.innerHTML = ''; // Clear previous party
+
+            const partySize = roll("1d4+4");
+            
+            // Determine Party Level Tier (L1, L3, or L5 for all members)
+            const tierRoll = d(6);
+            let partyLevelTier;
+            if (tierRoll <= 2) partyLevelTier = 1;       // Low Level Party (L1 stats)
+            else if (tierRoll <= 4) partyLevelTier = 3;  // Medium Level Party (L3 stats)
+            else partyLevelTier = 5;                     // High Level Party (L5 stats)
+
+
+            for (let i = 0; i < partySize; i++) {
+                const adventurer = generateAdventurer(partyLevelTier);
+                displayAdventurer(adventurer, partyDisplay);
+            }
+        }
+
+        function displayAdventurer(adv, container) {
+            const card = document.createElement('div');
+            card.className = 'dw-bg-card p-5 rounded-lg shadow-lg card break-inside-avoid-column'; // Added break-inside-avoid for better column flow if using multi-column layouts
+
+            let abilitiesHTML = adv.Abilities.length > 0 ? `<li>${adv.Abilities.join('</li><li>')}</li>` : '<li>None</li>';
+            let gearHTML = adv.Gear.length > 0 ? `<li>${adv.Gear.join('</li><li>')}</li>` : '<li>None</li>';
+            let kindredTraitsHTML = adv.kindredTraits.map(trait => `<li class="kindred-trait">${trait}</li>`).join('');
+
+
+            card.innerHTML = `
+                <h2 class="text-xl font-bold dw-text-title dolmenwood-header mb-1">${adv.name}</h2>
+                <p class="text-sm dw-text-secondary mb-1">${adv.kindred} ${adv.className} (Level ${adv.level} ${adv.title})</p>
+                <hr class="my-3 dw-border">
+                <dl class="stat-block grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+                    <dt>AC:</dt> <dd>${adv.AC}</dd>
+                    <dt>HP:</dt> <dd>${adv.HP}</dd>
+                    <dt>Saves:</dt> <dd class="col-span-2">${adv.Saves} ${adv.kindred === "Mossling" ? "(+4 vs fungal/poison)" : ""}</dd>
+                    <dt>Attack:</dt> <dd class="col-span-2">${adv.AttackDetails}</dd>
+                    <dt>Speed:</dt> <dd>${adv.Speed}</dd>
+                    <dt>Morale:</dt> <dd>${adv.Morale}</dd>
+                    <dt>XP:</dt> <dd>${adv.XP}</dd>
+                </dl>
+                <hr class="my-3 dw-border">
+                <div>
+                    <h3 class="font-semibold dw-text-primary mt-3 mb-1">Kindred Traits:</h3>
+                    <ul class="list-disc list-inside text-xs dw-text-secondary space-y-0.5">
+                        ${kindredTraitsHTML}
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="font-semibold dw-text-primary mt-3 mb-1">Gear:</h3>
+                    <ul class="list-disc list-inside text-xs dw-text-secondary space-y-0.5">
+                        ${gearHTML}
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="font-semibold dw-text-primary mt-3 mb-1">Abilities & Magic:</h3>
+                    <ul class="list-disc list-inside text-xs dw-text-secondary space-y-0.5">
+                        ${abilitiesHTML}
+                    </ul>
+                </div>
+            `;
+            container.appendChild(card);
+        }
+
+        // Event Listener
+        document.getElementById('generatePartyButton').addEventListener('click', generateParty);
+
+        // Initial party generation on load
+        generateParty();
+    </script>
+</body>
+</html>
