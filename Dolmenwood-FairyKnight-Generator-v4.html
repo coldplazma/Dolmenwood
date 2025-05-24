@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dolmenwood Fairy Knight Generator</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=IM+Fell+English:ital@0;1@1&display=swap');
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #f3e8d3; /* Earthy, parchment-like background */
+      color: #3a2d24; /* Dark brown text */
+    }
+    .container {
+      background-color: #fdf6e9; /* Lighter parchment for the container */
+      border: 1px solid #d3c0a5;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    h1 {
+      font-family: 'IM Fell English', serif;
+      color: #5d4037; /* Darker brown for heading */
+    }
+    #generate-btn {
+      background-color: #795548; /* Earthy button color */
+      transition: background-color 0.3s ease;
+    }
+    #generate-btn:hover {
+      background-color: #5d4037; /* Darker hover state */
+    }
+    #output {
+      background-color: #fffbf2; /* Very light parchment for output */
+      border: 1px dashed #d3c0a5; /* Dashed border for a more rustic feel */
+      font-family: 'IM Fell English', serif; /* Thematic font for output */
+      line-height: 1.7; /* Increased line-height for better readability */
+      color: #4e342e;
+      padding: 1.5rem; /* Added more padding */
+      font-size: 1.05em; /* Slightly larger font for output */
+    }
+  </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4 sm:p-6 lg:p-8">
+  <div class="container max-w-3xl mx-auto p-6 sm:p-8 rounded-lg">
+    <h1 class="text-3xl sm:text-4xl font-bold text-center mb-6 sm:mb-8">Dolmenwood Fairy Knight Generator</h1>
+    <button id="generate-btn" class="w-full sm:w-auto mx-auto block py-3 px-6 text-lg font-semibold rounded-md text-white shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-f3e8d3 focus:ring-5d4037">
+      Summon a Fairy Knight
+    </button>
+    <div class="mt-6 sm:mt-8 p-4 sm:p-6 rounded-md" id="output-container">
+      <pre id="output" aria-live="polite" class="whitespace-pre-wrap text-sm sm:text-base"></pre>
+    </div>
+  </div>
+
+  <script>
+  'use strict';
+
+  /**
+   * Returns a random element from an array.
+   * @param {Array<any>} arr - The array to pick from.
+   * @returns {any|undefined} A random element from the array, or undefined if array is empty.
+   */
+  const randomPick = arr => {
+    if (!arr || arr.length === 0) return undefined;
+    return arr[Math.floor(Math.random() * arr.length)];
+  }
+
+  // Data Tables
+  const tables = {
+    fairyKnightTitles: [
+      "Sir", "Dame", "Lord", "Lady", "Knight-Errant of the Wold", "Warden of the Thorn", "Guardian of the Moonlit Path",
+      "Champion of the Seelie Court", "Knight of the Unseelie Accord", "Blade of the Gloaming", "Sentinel of the Hidden Ways",
+      "The Knight of Motes", "The Glimmering Knight", "The Knight of Whispers", "Keeper of the Dew", "Baron/Baroness of the Briar",
+      "The Moss-Clad Champion", "The Lantern Knight", "Rider of the Wild Hunt (aspirant)", "The Knight of Cobwebs", "The Star-Touched"
+    ],
+    fairyNames: [ // Includes some names that are also nobles, which is fine for knights.
+      "Bucket-and-Broth", "Candle-Bent-Sidewise", "Glance-Askew-Guillem", "Jack-of-Many-Colours", "Lace-and-Polkadot",
+      "Lament-of-Bones-Broken", "LightlyCome--Softly", "Lillies-o'er-Heartsight", "Prick-of-the-Nail", "Silver-and-Quicksilver",
+      "Spring-to-the-Queen", "Sprue-Upon-Gallows", "Sun's-Turning-Tide", "Supper-Before-Noon", "Too-Soon-Begotten",
+      "Trick-of-the-Light", "Tryst-about-Town", "Tumble-and-Thimble", "Wine-By-The-Goblet", "Youth-Turned-Curdled", "Mai-Fleur", "Thorn-Rosy", "Belladonna", "Gladhand", "Mallowheart", "Andromethia", "Abyssinia", "Hador", "Ygraine"
+      // More names from previous versions can be added here if desired.
+    ],
+    // New Allegiance Structure: Links Nobles, Banners, and Realms
+    feyCourts: [
+        { noble: "The Cold Prince", banner: "The Cold Prince's Icicle Throne", realm: "Frigia" },
+        { noble: "The Duke Who Cherishes Dreams", banner: "The Duke Who Cherishes Dreams' Alabaster Spire", realm: "Hypnagogia" },
+        { noble: "The Earl of Yellow", banner: "The Earl of Yellow's Golden Sun", realm: "The Yellow Wood (Court of the Earl of Yellow)" },
+        { noble: "Snoutgrub, the Goblin King", banner: "The Goblin King's Muddled Standard", realm: "Goblinhold (Castle Muddlemoot)" },
+        { noble: "The Hag Thorn-Rosy", banner: "The Hag Thorn-Rosy's Steaming Bath", realm: "The Baths of Astralon" },
+        { noble: "King Pusskin", banner: "King Pusskin's Whiskered Sigil", realm: "The High Wold" },
+        { noble: "Lady Belladonna", banner: "Lady Belladonna's Black Lace", realm: "Absynthe (Blackwood Manor)" },
+        { noble: "Ygraine, Lady of Midnight", banner: "The Lady of Midnight's Shadowed Moon", realm: "Diuthurnia" },
+        { noble: "Mai-Fleur, Lady of Spring Unending", banner: "The Lady of Spring Unending's White Rose", realm: "Everborne (Tainglass)" },
+        // Note: Duke Mai-Fleur's Ivy-Crowned Unicorn banner could also point to Everborne or a specific Hunting Ground. For simplicity, using Lady of Spring Unending.
+        { noble: "Lord Gladhand", banner: "Lord Gladhand's Motley Mask", realm: "Whyforth (Spoondrift Castle)" },
+        { noble: "Prince Mallowheart", banner: "Prince Mallowheart's Iron Thorns", realm: "Lampwrack (Harkthold)" },
+        { noble: "Princess Andromethia", banner: "Princess Andromethia's Spiraled Horn", realm: "Tallowspire (Palace of Sighs)" },
+        { noble: "Queen Abyssinia", banner: "Queen Abyssinia's Silver Claw", realm: "Catland (Murquine Palace)" },
+        { noble: "The Queen of Blackbirds (Lament-of-Bones-Broken)", banner: "The Queen of Blackbirds' Raven Feather", realm: "Ravenwild (Nooning Keep)" },
+        { noble: "Regent Hador", banner: "Regent Hador's Cerulean Knot", realm: "Gloomhold" }
+    ],
+    heraldicFieldTinctures: [
+      "Azure (sky blue)", "Gules (blood red)", "Vert (forest green)", "Purpure (royal purple)", "Sable (midnight black)",
+      "Or (gleaming gold)", "Argent (polished silver)", "Sanguine (dark blood red)", "Murrey (mulberry purple)", "Tenné (tawny orange)",
+      "Celestial Blue (star-flecked)", "Veridian (moss green)", "Amethyst (deep purple)", "Sepia (aged brown)", "Moon-Silver", "Sun-Gold",
+      "Shadow-Black", "Blood-Crimson", "Leaf-Green", "Twilight-Purple", "Mist-Grey", "Fairy-Bismuth", "Radium-Green"
+    ],
+    feyColorsForCharges: ["Veridian", "Azure", "Crimson", "Amethyst", "Golden", "Silver", "Shadow", "Moonbeam", "Glimmering", "Twilight-hued"],
+    heraldicChargeObjects: [
+      "Unicorn (Blessed)", "Unicorn (Corrupt)", "Grimalkin", "Woodgrue", "Sprite (specify color)", "Elf (noble)", "Breggle (longhorn)",
+      "Wyrm (specify color)", "Manticore", "Basilisk", "Cockatrice", "Peryton", "Kelpie", "Fairy Horse", "Devil Goat",
+      "Raven", "Owl", "Stag", "Boar", "Wolf", "Fox", "Badger", "Hawk", "Toad", "Serpent", "Spider (giant)", "Moth (giant)", "Beetle (jeweled)",
+      "Moon (crescent, full, or new)", "Star (five-pointed, seven-pointed)", "Sun (radiant)", "Thorned Rose", "Ivy Leaf", "Oak Tree", "Standing Stone", "Dolmen",
+      "Cup/Chalice", "Sword (crossed or single)", "Key", "Crown (antlered, jeweled)", "Sceptre", "Lantern", "Pipe (smoking)", "Lute", "Scroll",
+      "Witch's Hat", "Jester's Cap", "Knight's Helm", "Grasping Hand", "Weeping Eye", "Whispering Mouth", "Shadow Figure", "Wisp", "Mushroom (fly agaric, morel)",
+      "Acorn", "Thistle", "Gnarled Tree", "Broken Sword", "Fairy Ring", "Winding Path", "Keyhole", "Goblet of Stars", "Singing Stone"
+    ],
+    heraldicChargeConditions: [
+      "Rampant", "Passant", "Couchant", "Sejant", "Statant", "Weeping", "Laughing", "Sleeping", "Dancing", "Burning", "Frozen", "Petrified", "Glowing", "Shrouded", "Veiled", "Whispering", "Singing", "Silent", "Broken", "Entwined", "Winged", "Crowned", "Bleeding", "Shadowy", "Glimmering", "Moonlit", "Star-touched", "Moss-covered", "Thorn-wreathed", "Fey-kissed", "Dreaming", "Warped", "Fading", "Ancient"
+    ],
+    heraldicArrangements: [
+      "[FieldColour] field, bearing a [ChargeMetal] [ChargeCondition] [ChargeObject]",
+      "[FieldMetal] field, bearing a [ChargeColour] [ChargeCondition] [ChargeObject]",
+      "[FieldPattern] field, bearing a [ChargeMetalOrColour] [ChargeCondition] [ChargeObject]",
+      "[FieldColour] field, bearing a [ChargeColour2] [ChargeCondition] [ChargeObject] (a fey defiance of tincture!)",
+      "[FieldMetal] field, bearing a [ChargeMetal2] [ChargeCondition] [ChargeObject] (a fey defiance of tincture!)"
+    ],
+    heraldicFieldPatterns: ["Chequy (checkered)", "Vairy (bell-shapes)", "Gyronny (radiating triangles)", "Paly (vertical stripes)", "Barry (horizontal stripes)", "Bendy (diagonal stripes)", "Fretty (latticework)", "Lozengy (diamonds)", "Semé-de-lys (strewn with fleurs-de-lys)", "Semé of Stars", "Semé of Moons", "Semé of Thorns"],
+    hairColors: ["Silver", "Moon-white", "Raven-black", "Leaf-green", "Autumn-russet", "Sky-blue", "Rose-gold", "Amethyst", "Shadow-grey", "Like spun moonlight", "Like dark forest loam", "The colour of twilight"],
+    hairStyles: ["Long and flowing", "Wild and unkempt", "Braided with thorns and flowers", "Short and elfin", "Wreathed in mist", "Adorned with tiny glowing motes", "Constantly shifting", "Like spun glass", "Woven with starlight"],
+    eyeColors: ["Emerald green", "Sapphire blue", "Amethyst purple", "Ruby red", "Gold like a cat's", "Silver like the moon", "Obsidian black", "Starlit (flecked with light)", "Misty grey", "Pools of shadow", "Like dawn", "The colour of old moss"],
+    eyeQualities: ["Glowing faintly", "That seem to know your secrets", "That change with their mood", "Like pools of deep water", "That sparkle with mischief", "That hold ancient sorrow", "That never quite focus on you", "That reflect the forest", "That hold the light of distant stars"],
+    feyFeatures: [
+      "Delicate, moth-like antennae", "Small, iridescent dragonfly wings", "Skin like polished bark", "A faint, shimmering aura", "Antlers of slender, silver birch", "Ears like autumn leaves", "Fingernails of polished jet", "A voice like wind chimes", "Hair that trails glowing pollen", "Eyes that reflect the phases of the moon", "A scent of damp earth and wildflowers", "Shadows that dance independently", "Skin that shimmers with faint, shifting colours", "A crown of living twigs and flowers", "Hooves of polished obsidian instead of feet"
+    ],
+    attireStyles: [
+      "Armour of woven moonlight and shadow", "A surcoat embroidered with constellations", "Clothes spun from cobwebs and dew", "A cloak of living leaves that rustle with secrets", "Boots that make no sound upon the forest floor", "Jewelry of uncut, glowing gems", "A mask of carved wood that changes expression", "Robes that shift in colour with the light", "Armour adorned with fey runes of protection", "A circlet of twisted thorns and starlight", "Gloves of supple shadow-stuff", "A sash woven from moonbeams"
+    ],
+    steeds: [
+      'Giant Stag with Antlers of Living Oak','Shadowy Wolf with Eyes of Embers','Great Mottled Owl with Silent Wings','Moon-Pale Unicorn with Silver Horn', 'Giant Spider with Web-Silk Saddle','Enchanted Boar with Tusks of Jade','A Grue-Steed of Twigs and Moonlight','A Nightmare with Mane of Shadowflame', 'A Giant Fox with Nine Tails','A Swan with Wings of Starlight','A Grassy Knoll that Walks','A Sentient Whirlwind of Leaves', 'A Giant Snail with Shell of Iridescent Crystal', 'A Dire Bat with Leathery Wings', 'An Elven Hound, Swift and Silent', 'A Griffon with Feathers of Dawn', 'A Giant Praying Mantis, Emerald Green'
+    ],
+    fairyWeapons: [
+      "a Thorn Blade that weeps sleep-inducing dew", "a Moon-Forged Spear that hums with lunar energy", "a Singing Sword that laments its fallen foes", "a Bow of Yew that fires arrows of pure light", "a Mace of Gnarled Rowan, warding against evil spirits", "a Dagger of Obsidian that drinks shadows", "a Flail with heads of enchanted, buzzing acorns", "a Crystal Sword that shatters and reforms", "a Staff of Living Ivy that can entangle foes", "an Axe of Frozen Starlight", "a Rapier of Twisted Briar", "a Hammer that Rings with the Laughter of the Fey"
+    ],
+    fightingStyles: [ // These are now more about martial/tactical style, glamour is separate
+      'A whirlwind of graceful, dancing strikes','Precise, duelist\'s finesse, seeking vital points','Brutal, overwhelming power attacks','Cunning trickery and misdirection in combat','Guerilla tactics: strike and fade into the wild', 'Mounted charges with devastating impact','Defensive mastery, a bulwark against foes','Archery with uncanny, fey-touched accuracy','Wild, unpredictable ferocity','Silent, shadowy ambushes','Uses the environment to their advantage masterfully', 'Fights with the grace of a falling leaf and the fury of a winter storm', 'Uses illusions to misdirect and confuse (minor, non-glamour ones)', 'Their movements are a bewildering dance of feints and dodges', 'Can meld into shadows, striking unseen (mundane skill)', 'Wields a blade that whispers secrets of the feywild (non-magical, just unsettling)'
+    ],
+    // Glamour Effects (based on DMB p.40 for Fairy Knight)
+    glamourEffects: [
+        { name: "Beguiling Beauty", description: "Target is charmed (WIS save negates). Lasts 1 turn." },
+        { name: "Dreamstuff Cloud", description: "Creates a 20’ radius cloud of shimmering motes. Creatures starting their turn inside are slowed (DEX save for half speed). Lasts 1 turn." },
+        { name: "Illusory Duplicates", description: "1d3 illusory duplicates appear. Attacks against the knight have a 50% chance to target an illusion. Lasts 1 turn." },
+        { name: "Moonlit Blade", description: "Weapon emits silver light (30’ radius) and deals +1d6 radiant damage on the knight's next successful weapon hit. Glamour lasts 1 turn (buff applies to one hit)." },
+        { name: "Shadow Form", description: "Knight becomes shadowy and insubstantial, gaining resistance to non-magical bludgeoning, piercing, and slashing damage. Lasts 1 turn." },
+        { name: "Thorn Lash", description: "Thorny vines erupt to restrain target (STR save negates or to escape as an action). Lasts until escaped or knight dismisses." }
+    ],
+    geases: [
+      'Must speak only in rhyme','Cannot refuse a request for aid from a lost child','Must plant a seed of a rare moonflower at every standing stone they pass', 'Sworn to protect a specific, hidden glade in Dolmenwood','Must leave a gift of spun moonlight at any fairy door encountered', 'Cannot abide the touch of cold iron, recoiling in pain','Must always repay a kindness threefold, and a slight tenfold', 'Bound to answer any riddle posed to them truthfully','Can only sleep beneath the open sky, never indoors', 'Must challenge any who boast of their prowess to a duel of wits or skill','Compelled to collect fallen stars', 'Must never reveal their true name to a mortal','Cursed to slowly turn into a tree if they tarry too long in one place', 'Must offer a song or story to any ancient tree they meet','Cannot cross running water without assistance from a talking animal'
+    ],
+    quirks: [
+      'Collects dewdrops in tiny crystal vials','Speaks to insects as if they were courtiers','Leaves trails of shimmering dust', 'Humming tunes that only they can hear, which sometimes affect the weather subtly','Skin changes hue slightly with their mood', 'Always carries a withered bouquet of forgotten flowers','Believes their steed offers profound philosophical advice', 'Can only eat food that is either black or white','Decorates their armor with living, glowing fungi', 'Has a tiny, invisible sprite companion that whispers secrets (and nonsense)','Sheds tears of amber or pearl', 'Laughs at inappropriate moments, especially in dire peril','Can taste memories on the wind','Constantly rearranges small objects into symmetrical patterns'
+    ],
+    demeanors: [
+      "Aloof and ethereal", "Whimsical and prone to sudden fits of laughter or melancholy", "Stern and ancient", "Playfully cruel, with a glint of mischief", "Dreamy and distracted", "Fiercely protective of the natural world", "Enigmatic and secretive, speaking in riddles", "Wild and untamed", "Curious and inquisitive of mortals", "Solemn and bound by ancient oaths", "Graceful and elegant", "Cold and distant, like a winter frost"
+    ],
+    motivations: [
+      "To find a lost fairy relic", "To reclaim a part of Dolmenwood for their Court", "To understand the strange ways of mortals", "To escape a feud in the Fairy realm", "To guard a sacred site or portal", "To hunt an elusive magical beast", "To seek a mortal champion for a Fairy cause", "To experience unique mortal sensations", "To unravel a magical curse", "To serve as an emissary or spy", "To find a cure for the 'fading'", "To test their mettle in Dolmenwood"
+    ]
+  };
+
+  const outputElement = document.getElementById('output');
+  const generateBtn = document.getElementById('generate-btn');
+
+  function generateKnight() {
+    const selectedAllegiance = randomPick(tables.feyCourts) || { noble: "A Forgotten Lord", banner: "A Tattered Standard", realm: "A Lost Glade" };
+    let selectedChargeObject = randomPick(tables.heraldicChargeObjects) || "Star (five-pointed)";
+    if (selectedChargeObject.includes("(specify color)")) {
+        const feyColor = randomPick(tables.feyColorsForCharges) || "Glimmering";
+        selectedChargeObject = selectedChargeObject.replace("(specify color)", `(${feyColor})`);
+    }
+
+
+    const knight = {
+      title: randomPick(tables.fairyKnightTitles) || "Sir",
+      name: randomPick(tables.fairyNames) || "Glimmerdew",
+      allegiance: selectedAllegiance,
+      appearance: {
+        hair: `${randomPick(tables.hairColors) || "Silver"}, ${randomPick(tables.hairStyles) || "Long and flowing"}`,
+        eyes: `${randomPick(tables.eyeColors) || "Emerald green"}, ${randomPick(tables.eyeQualities) || "Glowing faintly"}`,
+        feyFeature: randomPick(tables.feyFeatures) || "A faint, shimmering aura",
+        attire: randomPick(tables.attireStyles) || "Armour of woven moonlight"
+      },
+      heraldry: {}, // Will be constructed below
+      weapon: randomPick(tables.fairyWeapons) || "a Thorn Blade",
+      style: randomPick(tables.fightingStyles) || "Fights with fey grace",
+      glamour: randomPick(tables.glamourEffects) || { name: "Moonlit Blade", description: "Weapon emits silver light (30’ radius) and deals +1d6 radiant damage on the knight's next successful weapon hit. Glamour lasts 1 turn (buff applies to one hit)." },
+      steed: randomPick(tables.steeds) || "Moon-Pale Unicorn",
+      geas: randomPick(tables.geases) || "Must speak only in rhyme",
+      quirk: randomPick(tables.quirks) || "Collects dewdrops",
+      demeanor: randomPick(tables.demeanors) || "Aloof and ethereal",
+      motivation: randomPick(tables.motivations) || "To find a lost fairy relic",
+    };
+
+    // Construct more descriptive heraldry
+    const allTincturesSource = tables.heraldicFieldTinctures;
+    const metals = allTincturesSource.filter(t => t.includes("(gold)") || t.includes("(silver)"));
+    const colours = allTincturesSource.filter(t => !(t.includes("(gold)") || t.includes("(silver)")));
+
+    const defaultMetal = "Or (gleaming gold)";
+    const defaultColour = "Azure (sky blue)";
+    const defaultPattern = "Chequy (checkered)";
+    // const defaultChargeObject = "Star (five-pointed)"; // Now handled by selectedChargeObject
+    const defaultChargeCondition = "Statant";
+
+    const currentMetals = metals.length > 0 ? metals : [defaultMetal];
+    const currentColours = colours.length > 0 ? colours : [defaultColour];
+
+    const arrangementTemplate = randomPick(tables.heraldicArrangements) || "[FieldColour] field, bearing a [ChargeMetal] [ChargeCondition] [ChargeObject]";
+    let heraldryString = arrangementTemplate;
+
+    if (arrangementTemplate.includes("[FieldPattern]")) {
+        const pattern = randomPick(tables.heraldicFieldPatterns) || defaultPattern;
+        const chargeTint = randomPick(allTincturesSource) || defaultMetal;
+        heraldryString = heraldryString.replace("[FieldPattern]", pattern).replace("[ChargeMetalOrColour]", chargeTint);
+    } else if (arrangementTemplate.includes("[FieldColour]") && arrangementTemplate.includes("[ChargeMetal]")) {
+        const fieldC = randomPick(currentColours);
+        const chargeM = randomPick(currentMetals);
+        heraldryString = heraldryString.replace("[FieldColour]", fieldC).replace("[ChargeMetal]", chargeM);
+    } else if (arrangementTemplate.includes("[FieldMetal]") && arrangementTemplate.includes("[ChargeColour]")) {
+        const fieldM = randomPick(currentMetals);
+        const chargeC = randomPick(currentColours);
+        heraldryString = heraldryString.replace("[FieldMetal]", fieldM).replace("[ChargeColour]", chargeC);
+    } else if (arrangementTemplate.includes("[FieldColour]") && arrangementTemplate.includes("[ChargeColour2]")) {
+        const fieldC1 = randomPick(currentColours);
+        let chargeC2Filtered = currentColours.filter(c => c !== fieldC1);
+        let fieldC2 = randomPick(chargeC2Filtered.length > 0 ? chargeC2Filtered : currentColours);
+        heraldryString = heraldryString.replace("[FieldColour]", fieldC1).replace("[ChargeColour2]", fieldC2 || defaultColour);
+    } else if (arrangementTemplate.includes("[FieldMetal]") && arrangementTemplate.includes("[ChargeMetal2]")) {
+        const fieldM1 = randomPick(currentMetals);
+        let chargeM2Filtered = currentMetals.filter(m => m !== fieldM1);
+        let fieldM2 = randomPick(chargeM2Filtered.length > 0 ? chargeM2Filtered : currentMetals);
+        heraldryString = heraldryString.replace("[FieldMetal]", fieldM1).replace("[ChargeMetal2]", fieldM2 || defaultMetal);
+    }
+
+    heraldryString = heraldryString
+        .replace("[ChargeCondition]", randomPick(tables.heraldicChargeConditions) || defaultChargeCondition)
+        .replace("[ChargeObject]", selectedChargeObject); // Use the potentially color-specified charge object
+
+    knight.heraldry.description = heraldryString;
+
+    // Construct the plain text output string
+    let output = `A FEY KNIGHT OF DOLMENWOOD\n`;
+    output += `----------------------------------------\n\n`;
+
+    output += `NAME & TITLE:\n  ${knight.title} ${knight.name}\n\n`;
+    output += `ALLEGIANCE:\n  Sworn to ${knight.allegiance.noble}\n  (Banner: ${knight.allegiance.banner})\n  Of ${knight.allegiance.realm}\n\n`;
+
+    output += `APPEARANCE:\n`;
+    output += `  Hair: ${knight.appearance.hair}\n`;
+    output += `  Eyes: ${knight.appearance.eyes}\n`;
+    output += `  Fey Feature: ${knight.appearance.feyFeature}\n`;
+    output += `  Attire: ${knight.appearance.attire}\n\n`;
+
+    output += `HERALDRY:\n  ${knight.heraldry.description}\n\n`;
+
+    output += `ARMAMENTS & STEED:\n`;
+    output += `  Weapon: ${knight.weapon}\n`;
+    output += `  Fighting Style: ${knight.style}\n`;
+    output += `  Steed: A magnificent ${knight.steed}\n\n`;
+
+    output += `NATURE & PURPOSE:\n`;
+    output += `  Demeanor: ${knight.demeanor}\n`;
+    output += `  Quirk: ${knight.quirk}\n`;
+    output += `  Geas/Obligation: ${knight.geas}\n`;
+    output += `  Motivation: ${knight.motivation}\n\n`;
+
+    output += `FAIRY KNIGHT ABILITIES (per Dolmenwood Monster Book):\n`;
+    output += `  HD: 4 (18hp), AC: 16 [19] (ornate plate + shield)\n`;
+    output += `  Attack: 1 × weapon (1d8 or by weapon)\n`;
+    output += `  Move: 120’ (40’) / 180’ (60’) mounted, Morale: 9, Saves: 11\n`;
+    output += `  Alignment: Neutral, XP: 175\n`;
+    output += `  Special: Fey Grace (Adv. on saves vs charm/illusion),\n`;
+    output += `           Iron Aversion (Disadv. if touching cold iron; 1d4 dmg/round),\n`;
+    output += `           Typically rides a fey steed.\n\n`;
+
+    output += `SIGNATURE GLAMOUR:\n  ${knight.glamour.name}: ${knight.glamour.description}\n`;
+    output += `  (May activate when hitting with an attack or when a creature fails a save against one of the knight's abilities. Lasts 1 turn unless specified.)\n`;
+
+
+    outputElement.textContent = output;
+  }
+
+  generateBtn.addEventListener('click', generateKnight);
+
+  // Initial generation
+  generateKnight();
+  </script>
+</body>
+</html>
