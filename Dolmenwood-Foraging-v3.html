@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dolmenwood Wilderness Resource Generator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            padding: 2rem;
+        }
+        .container {
+            background-color: #ffffff;
+            border-radius: 1rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            padding: 2.5rem;
+            width: 100%;
+            max-width: 700px;
+            box-sizing: border-box;
+        }
+        .section-box {
+            border: 1px solid #e5e7eb;
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            background-color: #f9fafb;
+        }
+        .btn-primary {
+            background-color: #4f46e5;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            transition: background-color 0.2s ease-in-out;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        .btn-primary:hover {
+            background-color: #4338ca;
+        }
+        input[type="number"], select {
+            padding: 0.5rem;
+            border-radius: 0.5rem;
+            border: 1px solid #d1d5db;
+            width: 100%;
+            box-sizing: border-box;
+            background-color: white;
+        }
+        input[type="checkbox"] {
+            transform: scale(1.2);
+            margin-right: 0.5rem;
+        }
+        .result-box {
+            background-color: #e0f2f7;
+            border-left: 4px solid #0ea5e9;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-top: 1.5rem;
+        }
+        .animal-stats {
+            margin-top: 1rem;
+            padding-left: 1rem;
+            border-left: 2px solid #a78bfa;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-3xl font-bold text-center text-gray-800 mb-8">Dolmenwood Wilderness Resource Generator</h1>
+
+        <div class="section-box">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">Foraging</h2>
+            <div class="mb-4">
+                <label for="foragingSurvivalTarget" class="block text-gray-700 text-sm font-semibold mb-2">Survival Check Target:</label>
+                <input type="number" id="foragingSurvivalTarget" value="10" min="1" class="focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            </div>
+            <div class="mb-6 flex items-center">
+                <input type="checkbox" id="foragingDevoteFullDay" class="form-checkbox text-indigo-600">
+                <label for="foragingDevoteFullDay" class="text-gray-700 text-sm font-semibold">Devote a full day (+2 bonus)</label>
+            </div>
+            <button id="generateForagingBtn" class="btn-primary w-full">Generate Foraging Result</button>
+            <div id="foragingResults" class="result-box hidden">
+                <h3 class="text-xl font-semibold text-gray-800 mb-2">Results:</h3>
+                <p id="foragingSurvivalRoll" class="text-gray-700"></p>
+                <p id="foragingOutcome" class="text-gray-700"></p>
+                <p id="foragingFoodType" class="text-gray-700"></p>
+                <p id="foragingRations" class="text-gray-700"></p>
+            </div>
+        </div>
+
+        <div class="section-box">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">Fishing</h2>
+            <p class="text-gray-600 text-sm mb-4">Requires a fishing rod and tackle. Assumes you are in a hex with a lake or river.</p>
+            <div class="mb-4">
+                <label for="fishingSurvivalTarget" class="block text-gray-700 text-sm font-semibold mb-2">Survival Check Target:</label>
+                <input type="number" id="fishingSurvivalTarget" value="10" min="1" class="focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            </div>
+            <div class="mb-6 flex items-center">
+                <input type="checkbox" id="fishingDevoteFullDay" class="form-checkbox text-indigo-600">
+                <label for="fishingDevoteFullDay" class="text-gray-700 text-sm font-semibold">Devote a full day (+2 bonus)</label>
+            </div>
+            <button id="generateFishingBtn" class="btn-primary w-full">Generate Fishing Result</button>
+            <div id="fishingResults" class="result-box hidden">
+                <h3 class="text-xl font-semibold text-gray-800 mb-2">Results:</h3>
+                <p id="fishingSurvivalRoll" class="text-gray-700"></p>
+                <p id="fishingOutcome" class="text-gray-700"></p>
+                <p id="fishingCatchType" class="text-gray-700"></p>
+                <p id="fishingRations" class="text-gray-700"></p>
+            </div>
+        </div>
+
+        <div class="section-box">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">Hunting</h2>
+            <p class="text-gray-600 text-sm mb-4">Assumes you are attempting to creep up on game animals.</p>
+            <div class="mb-4">
+                <label for="huntingSurvivalTarget" class="block text-gray-700 text-sm font-semibold mb-2">Survival Check Target:</label>
+                <input type="number" id="huntingSurvivalTarget" value="10" min="1" class="focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            </div>
+            <div class="mb-4">
+                <label for="huntingTerrain" class="block text-gray-700 text-sm font-semibold mb-2">Terrain Type:</label>
+                <select id="huntingTerrain" class="focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    <option value="Bog">Bog</option>
+                    <option value="Farmland">Farmland</option>
+                    <option value="Forest, Boggy">Forest, Boggy</option>
+                    <option value="Forest, Craggy">Forest, Craggy</option>
+                    <option value="Forest, Hilly">Forest, Hilly</option>
+                    <option value="Forest, Open">Forest, Open</option>
+                    <option value="Forest, Tangled">Forest, Tangled</option>
+                    <option value="Forest, Thorny">Forest, Thorny</option>
+                    <option value="Fungal Forest">Fungal Forest</option>
+                    <option value="Hills">Hills</option>
+                    <option value="Meadow">Meadow</option>
+                    <option value="Swamp">Swamp</option>
+                </select>
+            </div>
+            <div class="mb-6 flex items-center">
+                <input type="checkbox" id="huntingDevoteFullDay" class="form-checkbox text-indigo-600">
+                <label for="huntingDevoteFullDay" class="text-gray-700 text-sm font-semibold">Devote a full day (+2 bonus)</label>
+            </div>
+            <button id="generateHuntingBtn" class="btn-primary w-full">Generate Hunting Result</button>
+            <div id="huntingResults" class="result-box hidden">
+                <h3 class="text-xl font-semibold text-gray-800 mb-2">Results:</h3>
+                <p id="huntingSurvivalRoll" class="text-gray-700"></p>
+                <p id="huntingOutcome" class="text-gray-700"></p>
+                <div id="huntingAnimalDetails">
+                    <p id="huntingAnimalType" class="text-gray-700"></p>
+                    <p id="huntingAnimalDescription" class="text-gray-700 text-sm italic mt-1"></p>
+                    <div id="huntingAnimalStats" class="animal-stats"></div>
+                </div>
+                <p id="huntingRations" class="text-gray-700 mt-2"></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Helper function to roll dice
+        function rollDice(num, sides) {
+            let total = 0;
+            for (let i = 0; i < num; i++) {
+                total += Math.floor(Math.random() * sides) + 1;
+            }
+            return total;
+        }
+
+        // --- Foraging Data (from pages 118-119) ---
+        const edibleFungi = [
+            { name: "Amethyst orb", description: "Transparent violet spheres with moist orifices. Smell of horse manure; hearty, chicken-like taste." },
+            { name: "Chanctonslip", description: "Flat, brown mushrooms that grow on tree trunks. Smell of fine pipeleaf, taste of spiced pumpkin." },
+            { name: "Drounberry", description: "Walnut-sized buttons, jet black with bright yellow gills. Odourless, but taste mildly of pepper." },
+            { name: "Fairy veil", description: "Silvery latticeworks that shine golden in moonlight. Smell faintly of leek, taste of kiwi. This fungus is perfectly nourishing, but is seldom foraged due to folktales claiming it is the property of the Cold Prince." },
+            { name: "Goodgilly", description: "Tall mushrooms with great, white, orb-like caps and pale pink gills. Smell of fresh rain. The caps taste of rotten fish, while the gills have a delicate, cinnamon flavour." },
+            { name: "Hell horns", description: "Ominous, black antlers with red striations. Smell of vomit, taste like lettuce. Hell horns are highly nutritious: a single ration can nourish two people instead of one." },
+            { name: "Liverwort Jack", description: "Mustard yellow toadstools with indigo spots. Odourless, taste of raw liver." },
+            { name: "Mangy horns", description: "Floppy red phalluses that ooze black juice. Smell of bark, taste of cooked apple. Mangy horns are tasty when eaten raw, but become tough and chewy if cooked." },
+            { name: "Marshguts", description: "Coils of glowing yellow tubes. Smell of sweat, with an odd, extremely moreish, fizzy flavour." },
+            { name: "Meat and bread", description: "Spherical sacs of deep blue hue with cyan stripes. Smell like raw meat, taste like stale bread. Cause stinking, rancid breath which attracts flies." },
+            { name: "Monkskull", description: "Tan coloured, brain-like mushrooms. Smell like pine and taste bloody. Perfectly nourishing, but something of an acquired taste." },
+            { name: "Moonchook", description: "White, moon-like orbs, with pocked craters. Smell like chicken soup, taste like raw onion. Moonchook mushrooms are a gourmet culinary item in Dolmenwood. Each ration can be sold for 1d6gp." },
+            { name: "Old Duchess", description: "Pink flutes with mauve stems. Smell like sewage, but taste of pineapple. It is the usual practice to hold one’s nose while eating." },
+            { name: "Purple piper", description: "Foot-wide, purple puffballs that emit drifts of pale green spores. Smell like wet dog, taste like old cabbage." },
+            { name: "Scrabey’s hair", description: "Mud brown, wispy filaments that ooze a lime green gel. Smell like beer and taste like a bland, mealy porridge." },
+            { name: "Shank-orbs", description: "Masses of gloopy, crimson orbs, spotted with droplets of white juice. Smell like leaf mould, with a metallic taste. Edible, but have no nutritive effect." },
+            { name: "Spatchcock", description: "Chunky, grey bracket fungi. Smell and taste of roasting game. Spatchcock mushrooms are one of the woodsman’s most treasured delicacies. Once foraged, they dissolve into slime within the day, so are rarely tasted by townsfolk." },
+            { name: "Willy-be-bold", description: "Tall, brown mushrooms with great, floppy caps and dark green gills. Smell of blue cheese, but have very little flavour. When eaten, these mushrooms inhibit social awkwardness." },
+            { name: "Windcap", description: "Oyster clusters, tan in colour, with maroon patches. Smell like burnt hair, with a strange, anti-flavour that numbs the tongue. Nourishing, but produce awful flatulence." },
+            { name: "Woodsman’s fancy", description: "Black and yellow striped, hairy spheres. Smell of strong solvent and taste of lavender. Woodsman’s fancy mushrooms bring on a very mild drunkenness and trigger the unbridled growth of hair from the nostrils and cheeks." }
+        ];
+
+        const ediblePlants = [
+            { name: "Barb cone", description: "Horribly barbed pine cones that conceal a profusion of fatty nuts. Taste like bacon dripping." },
+            { name: "Bent leek", description: "Wild vegetables with narrow, lank leaves that droop 2–3′ across the ground. Strong garlic flavour." },
+            { name: "Black medlar", description: "Rock hard, pink, inedible fruits. When they have lain in the undergrowth for a season, they become soft, slimy, and black. Sickly marshmallow flavour." },
+            { name: "Bogsnip", description: "A marsh-dwelling, wild relative of the common parsnip. Foraging bogsnips invariably involves wading into muddy pools, but the reward is a delightfully creamy root. Best pan-fried." },
+            { name: "Butter mandrake", description: "Anthropomorphic roots that wriggle when dug up and thrash when cooked. Hard and woody, but soften up when boiled. Deliciously buttery. Butter mandrakes are the safest and least defiant member of the mandrake family to deal with." },
+            { name: "Creeping prune", description: "Delectable miniature, purple fruits of a vine that creeps through the undergrowth and occasionally a short way up tree trunks. Taste like plum brandy." },
+            { name: "Gobble-drop", description: "Bulbous black berries clustered atop a thick green stem. Smell like offal, but taste sweet and crisp." },
+            { name: "Hag’s mantle", description: "Thick, furry, bright green leaves of a shade-dwelling herb. Their sulphurous aroma and furry texture are unpleasant, but the sweet, pungent flavour is a treat for the road-weary." },
+            { name: "Hangleberry", description: "Clusters of inch-round, succulent crimson fruits that dangle tantalisingly from high branches. Unpleasantly slimy texture, but taste delectably sweet." },
+            { name: "Hob nut", description: "Clusters of nuts encased in a hard shell that looks like a fairy’s tiny fist. Nourishing but have a somewhat unappealing taste (like stale bread). Eating a ration of hob nuts brings on a whimsical foolhardiness which lasts until the next day, incurring a –2 penalty to Saving Throws against magic." },
+            { name: "Jellycup", description: "Lambent orbs of orange, violet, or lime green jelly that droop from the top of a sunflower-like stem. Difficult to harvest without bursting. Typically eaten by squeezing the syrupy flesh into a bowl. Eating jellycups after dark brings on a very mild state of psychedelia wherein even the gravest circumstances seem comical." },
+            { name: "Lankleaf root", description: "Tangled root balls of a spiny bog shrub. Cleaning out the dirt from among the roots is time-consuming. Once boiled, the roots dissolve into a starchy pudding with a pleasant, smoky flavour." },
+            { name: "Noosenut", description: "Soft, hairy-shelled, orange nuts about the size of an eyeball. Very mild, slightly milky flavour. Noosenut trees are said to grow on ground where a criminal was once hanged." },
+            { name: "Prehensile radish", description: "Long white radishes identified aboveground by their bright pink stem clusters. Squirm like the tail of an angry monkey when uprooted. Taste of rotten egg with an aftertaste of cinnamon." },
+            { name: "Shankroot", description: "Long, black, hairy, sickle-shaped roots that take quite some effort to dig up. The skin is tough and bitter, but the flesh is tender and juicy, with a cherry flavour." },
+            { name: "Snodberry", description: "The tiny, blue berries of a horridly thorny bush. The odd, bitter / sweet taste does not make them worth the scratches entailed in harvesting them, but they grow in vast quantities so can at least provide a solid meal." },
+            { name: "Wallow shoot", description: "Pointy purple leaf-shoots that poke out from foetid puddles. The outer leaves are hard and scaly, but the insides are succulent and taste like pears." },
+            { name: "Westernut", description: "Tiny purplish nuts encased in incredibly hard shells. Require serious work to extract, but have a delightful flavour akin to popcorn. Grow only at the base of west-facing cliffs or ridges." },
+            { name: "Witch-elm lantern", description: "Papery, violet lanterns that conceal clusters of hard, green berries. Wince-inducingly tart, but highly nourishing. Local folk fear to harvest the fruits of the witch-elm, for it is said that the Queen of All Witches covets them for herself." },
+            { name: "Wranklefrond", description: "Delicate, hairy, green shoots of a common fern. Smell like beer; taste fresh and gingery." }
+        ];
+
+        // --- Fishing Data (from pages 116-117) ---
+        const edibleFish = [
+            { name: "Bally-tom", description: "Rotund, slow-swimming fish with silver scales and bulbous green eyes. When threatened, their eyes flash hypnotically. The party member with the lowest Wisdom must Save Versus Hold or be dazzled and fall splashing into the water. (Lone anglers—without a companion to rescue them—have been known to drown as a result.)" },
+            { name: "Braithgilly", description: "Lithe, white-scaled trout with adorable pink eyes. When unafraid, braithgillies poke their heads above the surface and sing beautiful, wistful melodies. Their songs sometimes contain snippets of well-known folk-melodies and passages that sound almost like words. According to folklore, braithgillies willingly leap into the net of a maiden who sings to them under the light of the moon." },
+            { name: "Butter-eel", description: "3′-long, buttery-brown eels with startled, gaping mouths and a tendency to writhe vigorously when caught. Butter-eels are coated with a fatty slime, making them difficult to land, requiring at least two PCs make a successful Dexterity Check." },
+            { name: "Gaffer", description: "Foot-long catfish with tufts of coarse white fur around their face and gills, often formed into a goat-like beard upon the chin. Bleat when dragged from the water. Their flesh is tough but has a palatable sweet-sour note." },
+            { name: "Giant catfish", description: "A real monster! Handle as a normal combat encounter (see giant catfish stats in the DMB). If the fish is killed, its flesh provides 4 rations per Hit Point." },
+            { name: "Groper", description: "Flat-bodied, green-skinned bottom feeders with gaping mouths and spacious gullets. There is a 2-in-6 chance of finding a random human trinket (DPB) in a fish’s belly." },
+            { name: "Gurney", description: "Big, ball-shaped fish with beady eyes, misshapen faces, and wide, flapping mouths. They are known among anglers for their habit of suddenly snapping with their concealed rows of vicious, spiny teeth. Characters who have not caught gurneys before must Save Versus Doom or suffer 1 point of damage." },
+            { name: "Hameth sprat", description: "Little black-scaled fish with long, ribbon tails. Flit around in great swarms, especially numerous in the River Hameth. Eaten whole (bones and all), typically fried in batter. A catch of hameth sprats only provides 2d4 rations." },
+            { name: "Lardfish", description: "Head-sized, translucent cream jellyfish with tangled tentacles dotted with clusters of grape-like nodules. The body of a lardfish is tough and somewhat fatty, but its tentacles are sweet and succulent." },
+            { name: "Maid-o’-the-lake", description: "Thigh-sized, pink, translucent squids renowned as a Dolmenwood delicacy. Their flesh is succulent and has a mildly fruity flavour. According to folklore, feasting beneath the moon on these squids fried in garlic butter is a sure way to summon the attentions of a witch, who will visit in the dead of night." },
+            { name: "Mummer", description: "Sluggish, puffy fish with mud-brown scales, pink, ribbon-like fins, and bulbous, yellow faces of an unnervingly human-like cast. There is a 3-in-6 chance that the face of one of the caught fish has an uncanny resemblance to a family member of someone in the party." },
+            { name: "Nag-pike", description: "Muscular, 3′-long, snaggle-toothed pikes with nine crooked horns upon their heads. Nag-pikes are vicious and tenacious, making them tricky to catch. The catch is only landed if at least two PCs make a successful Strength Check. When sliced and fried, nag-pikes’ flesh is deliciously gamy." },
+            { name: "Orbling", description: "Silvery, spherical jellyfish that hide in weeds during the day and only emerge after sundown. In shaded waters, they bob near the surface, resembling reflected moonlight. Their outer skin is rubbery, but their insides are soft and taste of toffee. They are typically eaten like boiled eggs, by slicing off the top and scooping out the insides with a spoon." },
+            { name: "Pilgrim crab", description: "Chunky violet crabs with long, delicate pincers and creamy-white underbellies. Their shells are graven with lines that look curiously like a religious script of some kind. (These are sometimes used as a means of fortune-telling.) If cooked alive, pilgrim crabs emit a shrill tone reminiscent of choirboys at practice." },
+            { name: "Puffer", description: "2′-round, near-spherical fish covered with hard scales and spines. Puffers are slow moving and easy to catch. Killing and preparing them is the tricky part: they have a gas-filled organ that explodes if not handled correctly. Characters who have not caught puffers before must Save Versus Blast or suffer 1d3 damage when the fish explode." },
+            { name: "Queen’s salmon", description: "Iridescent-scaled salmon that dart and leap playfully. Queen’s salmon are fairy fish that visit Dolmenwood to spawn. They speak Sylvan and basic Woldish, and address anglers in squeaking little voices when caught. In return for their lives, a catch of these fish offer to place their blessing upon the noble anglers. If the fish are released, each member of the fishing party gains a +4 bonus to the next Saving Throw rolled against a deadly effect (e.g. death, petrification, poison, etc.)." },
+            { name: "Screaming jenny", description: "Long, slender fish with frilly purple fins and tails. When pulled from the water, they emit a startling shriek, which has a 3-in-6 chance of attracting a wandering monster (see Encounters, p114)." },
+            { name: "Smuggler-fish", description: "Puffed up, putrid green fish with lemon yellow bellies and wide, astonished eyes. Sigh plaintively then give up the ghost when landed. There is a 2-in-6 chance of finding a small gem (1d20 × 10gp) in the belly of one of the caught fish." },
+            { name: "Twine-eel", description: "3′-long, twisty, finger-thick eels with scales of purple or burnished pink. Swim in great schools and voraciously attack small prey and tempting morsels of bait. Preparing them is fiddly work, due to all the fine bones, but their delectably sweet flesh makes it worthwhile." },
+            { name: "Wraithfish", description: "Lazy weed-browsers with near-transparent, jelly-like, white flesh. Wraithfish can turn incorporeal for brief periods, a trick they invariably perform when yanked out of the water by anglers. Madcap pipe music stymies this ability, and woodgrues are expert wraithfish catchers. Parties fishing without the requisite musical accompaniment only land fish sufficient for 1d6 rations." }
+        ];
+
+        // --- Hunting Data (from page 121, Monster Book pages 112-119) ---
+        // HP and size categories are taken directly from the Monster Book.
+        // Rations per HP: Small=1, Medium=2, Large=4 (from Campaign Book p120)
+        const gameAnimals = {
+            "Bog": [
+                { name: "False Unicorn", hp: () => rollDice(2, 8), avgHp: 9, size: "M", description: "White-furred deer with a single horn in the center of the forehead...", stats: { level: 2, ac: 12, saves: "D12 R13 H14 B15 S16", attacks: "Horn (+1, 1d4)", speed: 80, morale: 6, xp: 20 } },
+                { name: "Headhog", hp: () => rollDice(1, 4), avgHp: 2, size: "S", description: "Black-spined, flea-ridden hedgehogs with long, pink tongues...", stats: { level: 1, ac: 12, saves: "D12 R13 H14 B15 S16", attacks: "Bite (+0, 1d2)", speed: 30, morale: 6, xp: 10 } },
+                { name: "Honey Badger", hp: () => rollDice(1, 8), avgHp: 4, size: "S", description: "Squat, white-furred badgers that are slick with a honey-like substance...", stats: { level: 1, ac: 11, saves: "D12 R13 H14 B15 S16", attacks: "2 claws (+0, 1d3) and bite (+0, 1d3)", speed: 30, morale: 8, xp: 10 } },
+                { name: "Lurkey", hp: () => rollDice(1, 8), avgHp: 4, size: "S", description: "Ungainly ground birds with stiff, black feathers...", stats: { level: 1, ac: 12, saves: "D12 R13 H14 B15 S16", attacks: "Bite (+0, 1d2)", speed: 40, morale: 7, xp: 10 } },
+                { name: "Moss Mole", hp: () => rollDice(1, 4), avgHp: 2, size: "S", description: "Surface-dwelling moles as large as cats...", stats: { level: 1, ac: 10, saves: "D12 R13 H14 B15 S16", attacks: "Bite (+0, 1d2)", speed: 20, morale: 6, xp: 10 } },
+                { name: "Puggle", hp: () => rollDice(1, 8), avgHp: 4, size: "S", description: "Little, silver-furred, flat-faced dogs...", stats: { level: 1, ac: 13, saves: "D12 R13 H14 B15 S16", attacks: "Bite (+0, 1d4)", speed: 50, morale: 9, xp: 10 } },
+                { name: "Red Deer", hp: () => rollDice(3, 8), avgHp: 13, size: "L", description: "Elegant, red-furred deer with dappled flanks...", stats: { level: 3, ac: 12, saves: "D11 R12 H13 B14 S15", attacks: "Antlers (+2, 1d6) or stampede (+2, 1d20)", speed: 80, morale: 5, xp: 65 } },
+                { name: "Swamp Sloth", hp: () => rollDice(1, 8), avgHp: 4, size: "S", description: "Found primarily in the boggy regions of Dolmenwood...", stats: { level: 1, ac: 10, saves: "D12 R13 H14 B15 S16", attacks: "Claw (+0, 1d3)", speed: 10, morale: 6, xp: 10 } },
+                { name: "Trotteling", hp: () => rollDice(1, 8), avgHp: 4, size: "S", description: "Naked, miniature pigs with pinkish brown skin...", stats: { level: 1, ac: 12, saves: "D12 R13 H14 B15 S16", attacks: "Tusk (+0, 1d4)", speed: 40, morale: 8, xp: 10 } },
+                { name: "Woad", hp: () => rollDice(1, 8), avgHp: 4, size: "S", description: "Great, warty toads as big as a cat...", stats: { level: 1, ac: 11, saves: "D12 R13 H14 B15 S16", attacks: "Bite (+0, 1d4) or urine spray (+0, stench, range 10′)", speed: 30, morale: 7, xp: 15 } },
+                { name: "Yegril", hp: () => rollDice(4, 8), avgHp: 18, size: "L", description: "Gigantic, fluffy moose with luxuriant, purple fur...", stats: { level: 4, ac: 11, saves: "D10 R11 H12 B13 S14", attacks: "2 hooves (+3, 1d6)", speed: 40, morale: 6, xp: 80 } }
+            ],
+            "Farmland": [
+                { name: "Boar", hp: () => rollDice(3, 8), avgHp: 13, size: "M", description: "Omnivorous wild boars that dwell throughout Dolmenwood...", stats: { level: 3, ac: 12, saves: "D11 R12 H13 B14 S15", attacks: "Tusk (+2, 2d4)", speed: 50, morale: 9, xp: 40 } },
+                { name: "False Unicorn", hp: () => rollDice(2, 8), avgHp: 9, size: "M", description: "White-furred deer with a single horn in the center of the forehead...", stats: { level: 2, ac: 12, saves: "D12 R13 H14 B15 S16", attacks: "Horn (+1, 1d4)", speed: 80, morale: 6, xp: 20 } },
+                { name: "Headhog", hp: () => rollDice(1, 4), avgHp: 2, size: "S", description: "Black-spined, flea-ridden hedgehogs with long, pink tongues...", stats: { level: 1, ac: 12, saves: "D12 R13 H14 B15 S16", attacks: "Bite (+0, 1d2)", speed: 30, morale: 6, xp: 10 } },
+                { name: "Honey Badger", hp: () => rollDice(1, 8), avgHp: 4, size: "S", description: "Squat, white-furred badgers that are slick with a honey-like substance...", stats: { level: 1, ac: 11, saves: "D12 R13 H14 B15 S16", attacks: "2 claws (+0, 1d3) and bite (+0, 1d3)", speed: 30, morale: 8, xp: 10 } },
+                { name: "Lurkey", hp: () => rollDice(1, 8), avgHp: 4, size: "S", description: "Ungainly ground birds with stiff, black feathers...", stats: { level: 1, ac: 12, saves: "D12 R13 H14 B15 S16", attacks: "Bite (+0, 1d2)", speed: 40, morale: 7, xp: 10 } },
+                { name: "Merriman", hp: () => rollDice(1, 8), avgHp: 4, size: "S", description: "Miniature, golden swine with unsightly, curly tusks...", stats: { level: 1, ac: 13, saves: "D12 R13 H14 B15 S16", attacks: "Tusk (+0, 1d4)", speed: 40, morale: 7, xp: 10 } },
+                { name: "Moss Mole", hp: () => rollDice(1, 4), avgHp: 2, size: "S", description: "Surface-dwelling moles as large as cats...", stats: { level: 1, ac: 10, saves: "D12 R13 H14 B15 S16", attacks: "Bite (+0, 1d2)", speed: 20, morale: 6, xp: 10 } },
+                { name: "Puggle", hp: () => rollDice(1, 8), avgHp: 4, size: "S", description: "Little, silver-furred, flat-faced dogs...", stats: { level: 1, ac: 13, saves: "D12 R13 H14 B15 S16", attacks: "Bite (+0, 1d4)", speed: 50, morale: 9, xp: 10 } },
+                { name: "Red Deer", hp: () => rollDice(3, 8), avgHp: 13, size: "L", description: "Elegant, red-furred deer with dappled flanks...", stats: { level: 3, ac: 12, saves: "D11 R12 H13 B14 S15", attacks: "Antlers (+2, 1d6) or stampede (+2, 1d20)", speed: 80, morale: 5, xp: 65 } },
+                { name: "Trotteling", hp: () => rollDice(1, 8), avgHp: 4, size: "S", description: "Naked, miniature pigs with pinkish brown skin...", stats: { level: 1, ac: 12, saves: "D12 R13 H14 B15 S16", attacks: "Tusk (+0, 1d4)", speed: 40, morale: 8, xp: 10 } },
+                { name: "Woad", hp: () => rollDice(1, 8), avgHp: 4, size: "S", description: "Great, warty toads as big as a cat...", stats: { level: 1, ac: 11, saves: "D12 R13 H14 B15 S16", attacks: "Bite (+0, 1d4) or urine spray (+0, stench, range 10′)", speed: 30, morale: 7, xp: 15 } },
+                { name: "Yegril", hp: () => rollDice(4, 8), avgHp: 18, size: "L", description: "Gigantic, fluffy moose with luxuriant, purple fur...", stats: { level: 4, ac: 11, saves: "D10 R11 H12 B13 S14", attacks: "2 hooves (+3, 1d6)", speed: 40, morale: 6, xp: 80 } }
+            ],
+            "Fungal Forest": [
+                { name: "Boar", hp: () => rollDice(3, 8), avgHp: 13, size: "M", description: "Omnivorous wild boars that dwell throughout Dolmenwood...", stats: { level: 3, ac: 12, saves: "D11 R12 H13 B14 S15", attacks: "Tusk (+2, 2d4)", speed: 50, morale: 9, xp: 40 } },
+                { name: "Gelatinous Ape", hp: () => rollDice(2, 8), avgHp: 9, size: "L", description: "Hairless, brightly coloured, transparent apes (3′ tall) that creep through the trees and undergrowth...", stats: { level: 2, ac: 11, saves: "D12 R13 H14 B15 S16", attacks: "Thrown branch (+1, 1d4)", speed: 50, morale: 7, xp: 20 } },
+                { name: "Gobble", hp: () => rollDice(1, 4), avgHp: 2, size: "S", description: "Fluffy, purple, arboreal primates about the size of a baby...", stats: { level: 1, ac: 13, saves: "D12 R13 H14 B15 S16", attacks: "Bite (+0, 1d3)", speed: 40, morale: 6, xp: 10 } },
+                { name: "Headhog", hp: () => rollDice(1, 4), avgHp: 2, size: "S", description: "Black-spined, flea-ridden hedgehogs with long, pink tongues...", stats: { level: 1, ac: 12, saves: "D12 R13 H14 B15 S16", attacks: "Bite (+0, 1d2)", speed: 30, morale: 6, xp: 10 } },
+                { name: "Honey Badger", hp: () => rollDice(1, 8), avgHp: 4, size: "S", description: "Squat, white-furred badgers that are slick with a honey-like substance...", stats: { level: 1, ac: 11, saves: "D12 R13 H14 B15 S16", attacks: "2 claws (+0, 1d3) and bite (+0, 1d3)", speed: 30, morale: 8, xp: 10 } },
+                { name: "Merriman", hp: () => rollDice(1, 8), avgHp: 4, size: "S", description: "Miniature, golden swine with unsightly, curly tusks...", stats: { level: 1, ac: 13, saves: "D12 R13 H14 B15 S16", attacks: "Tusk (+0, 1d4)", speed: 40, morale: 7, xp: 10 } },
+                { name: "Moss Mole", hp: () => rollDice(1, 4), avgHp: 2, size: "S", description: "Surface-dwelling moles as large as cats...", stats: { level: 1, ac: 10, saves: "D12 R13 H14 B15 S16", attacks: "Bite (+0, 1d2)", speed: 20, morale: 6, xp: 10 } },
+                { name: "Puggle", hp: () => rollDice(1, 8), avgHp: 4, size: "S", description: "Little, silver-furred, flat-faced dogs...", stats: { level: 1, ac: 13, saves: "D12 R13 H14 B15 S16", attacks: "Bite (+0, 1d4)", speed: 50, morale: 9, xp: 10 } },
+                { name: "Red Deer", hp: () => rollDice(3, 8), avgHp: 13, size: "L", description: "Elegant, red-furred deer with dappled flanks...", stats: { level: 3, ac: 12, saves: "D11 R12 H13 B14 S15", attacks: "Antlers (+2, 1d6) or stampede (+2, 1d20)", speed: 80, morale: 5, xp: 65 } },
+                { name: "Swamp Sloth", hp: () => rollDice(1, 8), avgHp: 4, size: "S", description: "Found primarily in the boggy regions of Dolmenwood...", stats: { level: 1, ac: 10, saves: "D12 R13 H14 B15 S16", attacks: "Claw (+0, 1d3)", speed: 10, morale: 6, xp: 10 } },
+                { name: "Trotteling", hp: () => rollDice(1, 8), avgHp: 4, size: "S", description: "Naked, miniature pigs with pinkish brown skin...", stats: { level: 1, ac: 12, saves: "D12 R13 H14 B15 S16", attacks: "Tusk (+0, 1d4)", speed: 40, morale: 8, xp: 10 } },
+                { name: "Woad", hp: () => rollDice(1, 8), avgHp: 4, size: "S", description: "Great, warty toads as big as a cat...", stats: { level: 1, ac: 11, saves: "D12 R13 H14 B15 S16", attacks: "Bite (+0, 1d4) or urine spray (+0, stench, range 10′)", speed: 30, morale: 7, xp: 15 } },
+                { name: "Yegril", hp: () => rollDice(4, 8), avgHp: 18, size: "L", description: "Gigantic, fluffy moose with luxuriant, purple fur...", stats: { level: 4, ac: 11, saves: "D10 R11 H12 B13 S14", attacks: "2 hooves (+3, 1d6)", speed: 40, morale: 6, xp: 80 } }
+            ],
+            "Forest, Craggy": [
+                { name: "Boar", hp: () => rollDice(3, 8), avgHp: 13, size: "M", description: "Omnivorous wild boars that dwell throughout Dolmenwood...", stats: { level: 3, ac: 12, saves: "D11 R12 H13 B14 S15", attacks: "Tusk (+2, 2d4)", speed: 50, morale: 9, xp: 40 } },
+                { name: "False Unicorn", hp: () => rollDice(2, 8), avgHp: 9, size: "M", description: "White-furred deer with a single horn in the center of the forehead...", stats: { level: 2, ac: 12, saves: "D12 R13 H14 B15 S16", attacks: "Horn (+1, 1d4)", speed: 80, morale: 6, xp: 20 } },
+                { name: "Gelatinous Ape", hp: () => rollDice(2, 8), avgHp: 9, size: "L", description: "Hairless, brightly coloured, transparent apes (3′ tall) that creep through the trees and undergrowth...", stats: { level: 2, ac: 11, saves: "D12 R13 H14 B15 S16", attacks: "Thrown branch (+1, 1d4)", speed: 50, morale: 7, xp: 20 } },
+                { name: "Gobble", hp: () => rollDice(1, 4), avgHp: 2, size: "S", description: "Fluffy, purple, arboreal primates about the size of a baby...", stats: { level: 1, ac: 13, saves: "D12 R13 H14 B15 S16", attacks: "Bite (+0, 1d3)", speed: 40, morale: 6, xp: 10 } },
+                { name: "Headhog", hp: () => rollDice(1, 4), avgHp: 2, size: "S", description: "Black-spined, flea-ridden hedgehogs with long, pink tongues...", stats: { level: 1, ac: 12, saves: "D12 R13 H14 B15 S16", attacks: "Bite (+0, 1d2)", speed: 30, morale: 6, xp: 10 } },
+                { name: "Honey Badger", hp: () => rollDice(1, 8), avgHp: 4, size: "S", description: "Squat, white-furred badgers that are slick with a honey-like substance...", stats: { level: 1, ac: 11, saves: "D12 R13 H14 B15 S16", attacks: "2 claws (+0, 1d3) and bite (+0, 1d3)", speed: 30, morale: 8, xp: 10 } },
+                { name: "Lurkey", hp: () => rollDice(1, 8), avgHp: 4, size: "S", description: "Ungainly ground birds with stiff, black feathers...", stats: { level: 1, ac: 12, saves: "D12 R13 H14 B15 S16", attacks: "Bite (+0, 1d2)", speed: 40, morale: 7, xp: 10 } },
+                { name: "Moss Mole", hp: () => rollDice(1, 4), avgHp: 2, size: "S", description: "Surface-dwelling moles as large as cats...", stats: { level: 1, ac: 10, saves: "D12 R13 H14 B15 S16", attacks: "Bite (+0, 1d2)", speed: 20, morale: 6, xp: 10 } },
+                { name: "Puggle", hp: () => rollDice(1, 8), avgHp: 4, size: "S", description: "Little, silver-furred, flat-faced dogs...", stats: { level: 1, ac: 13, saves: "D12 R13 H14 B15 S16", attacks: "Bite (+0, 1d4)", speed: 50, morale: 9, xp: 10 } },
+                { name: "Red Deer", hp: () => rollDice(3, 8), avgHp: 13, size: "L", description: "Elegant, red-furred deer with dappled flanks...", stats: { level: 3, ac: 12, saves: "D11 R12 H13 B14 S15", attacks: "Antlers (+2, 1d6) or stampede (+2, 1d20)", speed: 80, morale: 5, xp: 65 } },
+                { name: "Trotteling", hp: () => rollDice(1, 8), avgHp: 4, size: "S", description: "Naked, miniature pigs with pinkish brown skin...", stats: { level: 1, ac: 12, saves: "D12 R13 H14 B15 S16", attacks: "Tusk (+0, 1d4)", speed: 40, morale: 8, xp: 10 } },
+                { name: "Yegril", hp: () => rollDice(4, 8), avgHp: 18, size: "L", description: "Gigantic, fluffy moose with luxuriant, purple fur...", stats: { level: 4, ac: 11, saves: "D10 R11 H12 B13 S14", attacks: "2 hooves (+3, 1d6)", speed: 40, morale: 6, xp: 80 } }
+            ],
+            "Forest, Hilly": [
+                { name: "Boar", hp: () => rollDice(3, 8), avgHp: 13, size: "M", description: "Omnivorous wild boars that dwell throughout Dolmenwood...", stats: { level: 3, ac: 12, saves: "D11 R12 H13 B14 S15", attacks: "Tusk (+2, 2d4)", speed: 50, morale: 9, xp: 40 } },
+                { name: "False Unicorn", hp: () => rollDice(2, 8), avgHp: 9, size: "M", description: "White-furred deer with a single horn in the center of the forehead...", stats: { level: 2, ac: 12, saves: "D12 R13 H14 B15 S16", attacks: "Horn (+1, 1d4)", speed: 80, morale: 6, xp: 20 } },
+                { name: "Gelatinous Ape", hp: () => rollDice(2, 8), avgHp: 9, size: "L", description: "Hairless, brightly coloured, transparent apes (3′ tall) that creep through the trees and undergrowth...", stats: { level: 2, ac: 11, saves: "D12 R13 H14 B15 S16", attacks: "Thrown branch (+1, 1d4)", speed: 50, morale: 7, xp: 20 } },
+                { name: "Gobble", hp: () => rollDice(1, 4), avgHp: 2, size: "S", description: "Fluffy, purple, arboreal primates about the size of a baby...", stats: { level: 1, ac: 13, saves: "D12 R13 H14 B15 S16", attacks: "Bite (+0, 1d3)", speed: 40, morale: 6, xp: 10 } },
+                { name: "Headhog", hp: () => rollDice(1, 4), avgHp: 2, size: "S", description: "Black-spined, flea-ridden hedgehogs with long, pink tongues...", stats: { level: 1, ac: 12, saves: "D12 R13 H14 B15 S16", attacks: "Bite (+0, 1d2)", speed: 30, morale: 6, xp: 10 } },
+                { name: "Honey Badger", hp: () => rollDice(1, 8), avgHp: 4, size: "S", description: "Squat, white-furred badgers that are slick with a honey-like substance...", stats: { level: 1, ac: 11, saves: "D12 R13 H14 B15 S16", attacks: "2 claws (+0, 1d3) and bite (+0, 1d3)", speed: 30, morale: 8, xp: 10 } },
+                { name: "Lurkey", hp: () => rollDice(1, 8), avgHp: 4, size: "S", description: "Ungainly ground birds with stiff, black feathers...", stats: { level: 1, ac: 12, saves: "D12 R13 H14 B15 S16", attacks: "Bite (+0, 1d2)", speed: 40, morale: 7, xp: 10 } },
+                { name: "Merriman", hp: () => rollDice(1, 8), avgHp: 4, size: "S", description: "Miniature, golden swine with unsightly, curly tusks...", stats: { level: 1, ac: 13, saves: "D12 R13 H14 B15 S16", attacks: "Tusk (+0, 1d4)", speed: 40, morale: 7, xp: 10 } },
+                { name: "Moss Mole", hp: () => rollDice(1, 4), avgHp: 2, size: "S", description: "Surface-dwelling moles as large as cats...", stats: { level: 1, ac: 10, saves: "D12 R13 H14 B15 S16", attacks: "Bite (+0, 1d2)", speed: 20, morale: 6, xp: 10 } },
+                { name: "Puggle", hp: () => rollDice(1, 8), avgHp: 4, size: "S", description: "Little, silver-furred, flat-faced dogs...", stats: { level: 1, ac: 13, saves: "D12 R13 H14 B15 S16", attacks: "Bite (+0, 1d4)", speed: 50, morale: 9, xp: 10 } },
+                { name: "Red Deer", hp: () => rollDice(3, 8), avgHp: 13, size: "L", description: "Elegant, red-furred deer with dappled flanks...", stats: { level: 3, ac: 12, saves: "D11 R12 H13 B14 S15", attacks: "Antlers (+2, 1d6) or stampede (+2, 1d20)", speed: 80, morale: 5, xp: 65 } },
+                { name: "Trotteling", hp: () => rollDice(1, 8), avgHp: 4, size: "S", description: "Naked, miniature pigs with pinkish brown skin...", stats: { level: 1, ac: 12, saves: "D12 R13 H14 B15 S16", attacks: "Tusk (+0, 1d4)", speed: 40, morale: 8, xp: 10 } },
+                { name: "Woad", hp: () => rollDice(1, 8), avgHp: 4, size: "S", description: "Great, warty toads as big as a cat...", stats: { level: 1, ac: 11, saves: "D12 R13 H14 B15 S16", attacks: "Bite (+0, 1d4) or urine spray (+0, stench, range 10′)", speed: 30, morale: 7, xp: 15 } },
+                { name: "Yegril", hp: () => rollDice(4, 8), avgHp: 18, size: "L", description: "Gigantic, fluffy moose with luxuriant, purple fur...", stats: { level: 4, ac: 11, saves: "D10 R11 H12 B13 S14", attacks: "2 hooves (+3, 1d6)", speed: 40, morale: 6, xp: 80 } }
+            ],
+            "Forest, Open": [
+                { name: "Boar", hp: () => rollDice(3, 8), avgHp: 13, size: "M", description: "Omnivorous wild boars that dwell throughout Dolmenwood...", stats: { level: 3, ac: 12, saves: "D11 R12 H13 B14 S15", attacks: "Tusk (+2, 2d4)", speed: 50, morale: 9, xp: 40 } },
+                { name: "False Unicorn", hp: () => rollDice(2, 8), avgHp: 9, size: "M", description: "White-furred deer with a single horn in the center of the forehead...", stats: { level: 2, ac: 12, saves: "D12 R13 H14 B15 S16", attacks: "Horn (+1, 1d4)", speed: 80, morale: 6, xp: 20 } },
+                { name: "Headhog", hp: () => rollDice(1, 4), avgHp: 2, size: "S", description: "Black-spined, flea-ridden hedgehogs with long, pink tongues...", stats: { level: 1, ac: 12, saves: "D12 R13 H14 B15 S16", attacks: "Bite (+0, 1d2)", speed: 30, morale: 6, xp: 10 } },
+                { name: "Honey Badger", hp: () => rollDice(1, 8), avgHp: 4, size: "S", description: "Squat, white-furred badgers that are slick with a honey-like substance...", stats: { level: 1, ac: 11, saves: "D12 R13 H14 B15 S16", attacks: "2 claws (+0, 1d3) and bite (+0, 1d3)", speed: 30, morale: 8, xp: 10 } },
+                { name: "Lurkey", hp: () => rollDice(1, 8), avgHp: 4, size: "S", description: "Ungainly ground birds with stiff, black feathers...", stats: { level: 1, ac: 12, saves: "D12 R13 H14 B15 S16", attacks: "Bite (+0, 1d2)", speed: 40, morale: 7, xp: 10 } },
+                { name: "Merriman", hp: () => rollDice(1, 8), avgHp: 4, size: "S", description: "Miniature, golden swine with unsightly, curly tusks...", stats: { level: 1, ac: 13, saves: "D12 R13 H14 B15 S16", attacks: "Tusk (+0, 1d4)", speed: 40, morale: 7, xp: 10 } },
+                { name: "Moss Mole", hp: () => rollDice(1, 4), avgHp: 2, size: "S", description: "Surface-dwelling moles as large as cats...", stats: { level: 1, ac: 10, saves: "D12 R13 H14 B15 S16", attacks: "Bite (+0, 1d2)", speed: 20, morale: 6, xp: 10 } },
+                { name: "Puggle", hp: () => rollDice(1, 8), avgHp: 4, size: "S", description: "Little, silver-furred, flat-faced dogs...", stats: { level: 1, ac: 13, saves: "D12 R13 H14 B15 S16", attacks: "Bite (+0, 1d4)", speed: 50, morale: 9, xp: 10 } },
+                { name: "Red Deer", hp: () => rollDice(3, 8), avgHp: 13, size: "L", description: "Elegant, red-furred deer with dappled flanks...", stats: { level: 3, ac: 12, saves: "D11 R12 H13 B14 S15", attacks: "Antlers (+2, 1d6) or stampede (+2, 1d20)", speed: 80, morale: 5, xp: 65 } },
+                { name: "Trotteling", hp: () => rollDice(1, 8), avgHp: 4, size: "S", description: "Naked, miniature pigs with pinkish brown skin...", stats: { level: 1, ac: 12, saves: "D12 R13 H14 B15 S16", attacks: "Tusk (+0, 1d4)", speed: 40, morale: 8, xp: 10 } },
+                { name: "Woad", hp: () => rollDice(1, 8), avgHp: 4, size: "S", description: "Great, warty toads as big as a cat...", stats: { level: 1, ac: 11, saves: "D12 R13 H14 B15 S16", attacks: "Bite (+0, 1d4) or urine spray (+0, stench, range 10′)", speed: 30, morale: 7, xp: 15 } },
+                { name: "Yegril", hp: () => rollDice(4, 8), avgHp: 18, size: "L", description: "Gigantic, fluffy moose with luxuriant, purple fur...", stats: { level: 4, ac: 11, saves: "D10 R11 H12 B13 S14", attacks: "2 hooves (+3, 1d6)", speed: 40, morale: 6, xp: 80 } }
+            ],
+            "Forest, Tangled": [
+                { name: "Boar", hp: () => rollDice(3, 8), avgHp: 13, size: "M", description: "Omnivorous wild boars that dwell throughout Dolmenwood...", stats: { level: 3, ac: 12, saves: "D11 R12 H13 B14 S15", attacks: "Tusk (+2, 2d4)", speed: 50, morale: 9, xp: 40 } },
+                { name: "False Unicorn", hp: () => rollDice(2, 8), avgHp: 9, size: "M", description: "White-furred deer with a single horn in the center of the forehead...", stats: { level: 2, ac: 12, saves: "D12 R13 H14 B15 S16", attacks: "Horn (+1, 1d4)", speed: 80, morale: 6, xp: 20 } },
+                { name: "Gelatinous Ape", hp: () => rollDice(2, 8), avgHp: 9, size: "L", description: "Hairless, brightly coloured, transparent apes (3′ tall) that creep through the trees and undergrowth...", stats: { level: 2, ac: 11, saves: "D12 R13 H14 B15 S16", attacks: "Thrown branch (+1, 1d4)", speed: 50, morale: 7, xp: 20 } },
+                { name: "Gobble", hp: () => rollDice(1, 4), avgHp: 2, size: "S", description: "Fluffy, purple, arboreal primates about the size of a baby...", stats: { level: 1, ac: 13, saves: "D12 R13 H14 B15 S16", attacks: "Bite (+0, 1d3)", speed: 40, morale: 6, xp: 10 } },
+                { name: "Headhog", hp: () => rollDice(1, 4), avgHp: 2, size: "S", description: "Black-spined, flea-ridden hedgehogs with long, pink tongues...", stats: { level: 1, ac: 12, saves: "D12 R13 H14 B15 S16", attacks: "Bite (+0, 1d2)", speed: 30, morale: 6, xp: 10 } },
+                { name: "Honey Badger", hp: () => rollDice(1, 8), avgHp: 4, size: "S", description: "Squat, white-furred badgers that are slick with a honey-like substance...", stats: { level: 1, ac: 11, saves: "D12 R13 H14 B15 S16", attacks: "2 claws (+0, 1d3) and bite (+0, 1d3)", speed: 30, morale: 8, xp: 10 } },
+                { name: "Lurkey", hp: () => rollDice(1, 8), avgHp: 4, size: "S", description: "Ungainly ground birds with stiff, black feathers...", stats: { level: 1, ac: 12, saves: "D12 R13 H14 B15 S16", attacks: "Bite (+0, 1d2)", speed: 40, morale: 7, xp: 10 } },
+                { name: "Merriman", hp: () => rollDice(1, 8), avgHp: 4, size: "S", description: "Miniature, golden swine with unsightly, curly tusks...", stats: { level: 1, ac: 13, saves: "D12 R13 H14 B15 S16", attacks: "Tusk (+0, 1d4)", speed: 40, morale: 7, xp: 10 } },
+                { name: "Moss Mole", hp: () => rollDice(1, 4), avgHp: 2, size: "S", description: "Surface-dwelling moles as large as cats...", stats: { level: 1, ac: 10, saves: "D12 R13 H14 B15 S16", attacks: "Bite (+0, 1d2)", speed: 20, morale: 6, xp: 10 } },
+                { name: "Puggle", hp: () => rollDice(1, 8), avgHp: 4, size: "S", description: "Little, silver-furred, flat-faced dogs...", stats: { level: 1, ac: 13, saves: "D12 R13 H14 B15 S16", attacks: "Bite (+0, 1d4)", speed: 50, morale: 9, xp: 10 } },
+                { name: "Red Deer", hp: () => rollDice(3, 8), avgHp: 13, size: "L", description: "Elegant, red-furred deer with dappled flanks...", stats: { level: 3, ac: 12, saves: "D11 R12 H13 B14 S15", attacks: "Antlers (+2, 1d6) or stampede (+2, 1d20)", speed: 80, morale: 5, xp: 65 } },
+                { name: "Trotteling", hp: () => rollDice(1, 8), avgHp: 4, size: "S", description: "Naked, miniature pigs with pinkish brown skin...", stats: { level: 1, ac: 12, saves: "D12 R13 H14 B15 S16", attacks: "Tusk (+0, 1d4)", speed: 40, morale: 8, xp: 10 } },
+                { name: "Woad", hp: () => rollDice(1, 8), avgHp: 4, size: "S", description: "Great, warty toads as big as a cat...", stats: { level: 1, ac: 11, saves: "D12 R13 H14 B15 S16", attacks: "Bite (+0, 1d4) or urine spray (+0, stench, range 10′)", speed: 30, morale: 7, xp: 15 } },
+                { name: "Yegril", hp: () => rollDice(4, 8), avgHp: 18, size: "L", description: "Gigantic, fluffy moose with luxuriant, purple fur...", stats: { level: 4, ac: 11, saves: "D10 R11 H12 B13 S14", attacks: "2 hooves (+3, 1d6)", speed: 40, morale: 6, xp: 80 } }
+            ],
+            "Forest, Thorny": [
+                { name: "Boar", hp: () => rollDice(3, 8), avgHp: 13, size: "M", description: "Omnivorous wild boars that dwell throughout Dolmenwood...", stats: { level: 3, ac: 12, saves: "D11 R12 H13 B14 S15", attacks: "Tusk (+2, 2d4)", speed: 50, morale: 9, xp: 40 } },
+                { name: "Gobble", hp: () => rollDice(1, 4), avgHp: 2, size: "S", description: "Fluffy, purple, arboreal primates about the size of a baby...", stats: { level: 1, ac: 13, saves: "D12 R13 H14 B15 S16", attacks: "Bite (+0, 1d3)", speed: 40, morale: 6, xp: 10 } },
+                { name: "Headhog", hp: () => rollDice(1, 4), avgHp: 2, size: "S", description: "Black-spined, flea-ridden hedgehogs with long, pink tongues...", stats: { level: 1, ac: 12, saves: "D12 R13 H14 B15 S16", attacks: "Bite (+0, 1d2)", speed: 30, morale: 6, xp: 10 } },
+                { name: "Honey Badger", hp: () => rollDice(1, 8), avgHp: 4, size: "S", description: "Squat, white-furred badgers that are slick with a honey-like substance...", stats: { level: 1, ac: 11, saves: "D12 R13 H14 B15 S16", attacks: "2 claws (+0, 1d3) and bite (+0, 1d3)", speed: 30, morale: 8, xp: 10 } },
+                { name: "Lurkey", hp: () => rollDice(1, 8), avgHp: 4, size: "S", description: "Ungainly ground birds with stiff, black feathers...", stats: { level: 1, ac: 12, saves: "D12 R13 H14 B15 S16", attacks: "Bite (+0, 1d2)", speed: 40, morale: 7, xp: 10 } },
+                { name: "Merriman", hp: () => rollDice(1, 8), avgHp: 4, size: "S", description: "Miniature, golden swine with unsightly, curly tusks...", stats: { level: 1, ac: 13, saves: "D12 R13 H14 B15 S16", attacks: "Tusk (+0, 1d4)", speed: 40, morale: 7, xp: 10 } },
+                { name: "Moss Mole", hp: () => rollDice(1, 4), avgHp: 2, size: "S", description: "Surface-dwelling moles as large as cats...", stats: { level: 1, ac: 10, saves: "D12 R13 H14 B15 S16", attacks: "Bite (+0, 1d2)", speed: 20, morale: 6, xp: 10 } },
+                { name: "Puggle", hp: () => rollDice(1, 8), avgHp: 4, size: "S", description: "Little, silver-furred, flat-faced dogs...", stats: { level: 1, ac: 13, saves: "D12 R13 H14 B15 S16", attacks: "Bite (+0, 1d4)", speed: 50, morale: 9, xp: 10 } },
+                { name: "Red Deer", hp: () => rollDice(3, 8), avgHp: 13, size: "L", description: "Elegant, red-furred deer with dappled flanks...", stats: { level: 3, ac: 12, saves: "D11 R12 H13 B14 S15", attacks: "Antlers (+2, 1d6) or stampede (+2, 1d20)", speed: 80, morale: 5, xp: 65 } },
+                { name: "Trotteling", hp: () => rollDice(1, 8), avgHp: 4, size: "S", description: "Naked, miniature pigs with pinkish brown skin...", stats: { level: 1, ac: 12, saves: "D12 R13 H14 B15 S16", attacks: "Tusk (+0, 1d4)", speed: 40, morale: 8, xp: 10 } },
+                { name: "Woad", hp: () => rollDice(1, 8), avgHp: 4, size: "S", description: "Great, warty toads as big as a cat...", stats: { level: 1, ac: 11, saves: "D12 R13 H14 B15 S16", attacks: "Bite (+0, 1d4) or urine spray (+0, stench, range 10′)", speed: 30, morale: 7, xp: 15 } },
+                { name: "Yegril", hp: () => rollDice(4, 8), avgHp: 18, size: "L", description: "Gigantic, fluffy moose with luxuriant, purple fur...", stats: { level: 4, ac: 11, saves: "D10 R11 H12 B13 S14", attacks: "2 hooves (+3, 1d6)", speed: 40, morale: 6, xp: 80 } }
+            ],
+            "Hills": [
+                { name: "Boar", hp: () => rollDice(3, 8), avgHp: 13, size: "M", description: "Omnivorous wild boars that dwell throughout Dolmenwood...", stats: { level: 3, ac: 12, saves: "D11 R12 H13 B14 S15", attacks: "Tusk (+2, 2d4)", speed: 50, morale: 9, xp: 40 } },
+                { name: "False Unicorn", hp: () => rollDice(2, 8), avgHp: 9, size: "M", description: "White-furred deer with a single horn in the center of the forehead...", stats: { level: 2, ac: 12, saves: "D12 R13 H14 B15 S16", attacks: "Horn (+1, 1d4)", speed: 80, morale: 6, xp: 20 } },
+                { name: "Headhog", hp: () => rollDice(1, 4), avgHp: 2, size: "S", description: "Black-spined, flea-ridden hedgehogs with long, pink tongues...", stats: { level: 1, ac: 12, saves: "D12 R13 H14 B15 S16", attacks: "Bite (+0, 1d2)", speed: 30, morale: 6, xp: 10 } },
+                { name: "Honey Badger", hp: () => rollDice(1, 8), avgHp: 4, size: "S", description: "Squat, white-furred badgers that are slick with a honey-like substance...", stats: { level: 1, ac: 11, saves: "D12 R13 H14 B15 S16", attacks: "2 claws (+0, 1d3) and bite (+0, 1d3)", speed: 30, morale: 8, xp: 10 } },
+                { name: "Lurkey", hp: () => rollDice(1, 8), avgHp: 4, size: "S", description: "Ungainly ground birds with stiff, black feathers...", stats: { level: 1, ac: 12, saves: "D12 R13 H14 B15 S16", attacks: "Bite (+0, 1d2)", speed: 40, morale: 7, xp: 10 } },
+                { name: "Merriman", hp: () => rollDice(1, 8), avgHp: 4, size: "S", description: "Miniature, golden swine with unsightly, curly tusks...", stats: { level: 1, ac: 13, saves: "D12 R13 H14 B15 S16", attacks: "Tusk (+0, 1d4)", speed: 40, morale: 7, xp: 10 } },
+                { name: "Moss Mole", hp: () => rollDice(1, 4), avgHp: 2, size: "S", description: "Surface-dwelling moles as large as cats...", stats: { level: 1, ac: 10, saves: "D12 R13 H14 B15 S16", attacks: "Bite (+0, 1d2)", speed: 20, morale: 6, xp: 10 } },
+                { name: "Puggle", hp: () => rollDice(1, 8), avgHp: 4, size: "S", description: "Little, silver-furred, flat-faced dogs...", stats: { level: 1, ac: 13, saves: "D12 R13 H14 B15 S16", attacks: "Bite (+0, 1d4)", speed: 50, morale: 9, xp: 10 } },
+                { name: "Red Deer", hp: () => rollDice(3, 8), avgHp: 13, size: "L", description: "Elegant, red-furred deer with dappled flanks...", stats: { level: 3, ac: 12, saves: "D11 R12 H13 B14 S15", attacks: "Antlers (+2, 1d6) or stampede (+2, 1d20)", speed: 80, morale: 5, xp: 65 } },
+                { name: "Trotteling", hp: () => rollDice(1, 8), avgHp: 4, size: "S", description: "Naked, miniature pigs with pinkish brown skin...", stats: { level: 1, ac: 12, saves: "D12 R13 H14 B15 S16", attacks: "Tusk (+0, 1d4)", speed: 40, morale: 8, xp: 10 } },
+                { name: "Woad", hp: () => rollDice(1, 8), avgHp: 4, size: "S", description: "Great, warty toads as big as a cat...", stats: { level: 1, ac: 11, saves: "D12 R13 H14 B15 S16", attacks: "Bite (+0, 1d4) or urine spray (+0, stench, range 10′)", speed: 30, morale: 7, xp: 15 } },
+                { name: "Yegril", hp: () => rollDice(4, 8), avgHp: 18, size: "L", description: "Gigantic, fluffy moose with luxuriant, purple fur...", stats: { level: 4, ac: 11, saves: "D10 R11 H12 B13 S14", attacks: "2 hooves (+3, 1d6)", speed: 40, morale: 6, xp: 80 } }
+            ],
+            "Meadow": [
+                { name: "False Unicorn", hp: () => rollDice(2, 8), avgHp: 9, size: "M", description: "White-furred deer with a single horn in the center of the forehead...", stats: { level: 2, ac: 12, saves: "D12 R13 H14 B15 S16", attacks: "Horn (+1, 1d4)", speed: 80, morale: 6, xp: 20 } },
+                { name: "Headhog", hp: () => rollDice(1, 4), avgHp: 2, size: "S", description: "Black-spined, flea-ridden hedgehogs with long, pink tongues...", stats: { level: 1, ac: 12, saves: "D12 R13 H14 B15 S16", attacks: "Bite (+0, 1d2)", speed: 30, morale: 6, xp: 10 } },
+                { name: "Honey Badger", hp: () => rollDice(1, 8), avgHp: 4, size: "S", description: "Squat, white-furred badgers that are slick with a honey-like substance...", stats: { level: 1, ac: 11, saves: "D12 R13 H14 B15 S16", attacks: "2 claws (+0, 1d3) and bite (+0, 1d3)", speed: 30, morale: 8, xp: 10 } },
+                { name: "Lurkey", hp: () => rollDice(1, 8), avgHp: 4, size: "S", description: "Ungainly ground birds with stiff, black feathers...", stats: { level: 1, ac: 12, saves: "D12 R13 H14 B15 S16", attacks: "Bite (+0, 1d2)", speed: 40, morale: 7, xp: 10 } },
+                { name: "Merriman", hp: () => rollDice(1, 8), avgHp: 4, size: "S", description: "Miniature, golden swine with unsightly, curly tusks...", stats: { level: 1, ac: 13, saves: "D12 R13 H14 B15 S16", attacks: "Tusk (+0, 1d4)", speed: 40, morale: 7, xp: 10 } },
+                { name: "Moss Mole", hp: () => rollDice(1, 4), avgHp: 2, size: "S", description: "Surface-dwelling moles as large as cats...", stats: { level: 1, ac: 10, saves: "D12 R13 H14 B15 S16", attacks: "Bite (+0, 1d2)", speed: 20, morale: 6, xp: 10 } },
+                { name: "Puggle", hp: () => rollDice(1, 8), avgHp: 4, size: "S", description: "Little, silver-furred, flat-faced dogs...", stats: { level: 1, ac: 13, saves: "D12 R13 H14 B15 S16", attacks: "Bite (+0, 1d4)", speed: 50, morale: 9, xp: 10 } },
+                { name: "Red Deer", hp: () => rollDice(3, 8), avgHp: 13, size: "L", description: "Elegant, red-furred deer with dappled flanks...", stats: { level: 3, ac: 12, saves: "D11 R12 H13 B14 S15", attacks: "Antlers (+2, 1d6) or stampede (+2, 1d20)", speed: 80, morale: 5, xp: 65 } },
+                { name: "Trotteling", hp: () => rollDice(1, 8), avgHp: 4, size: "S", description: "Naked, miniature pigs with pinkish brown skin...", stats: { level: 1, ac: 12, saves: "D12 R13 H14 B15 S16", attacks: "Tusk (+0, 1d4)", speed: 40, morale: 8, xp: 10 } },
+                { name: "Woad", hp: () => rollDice(1, 8), avgHp: 4, size: "S", description: "Great, warty toads as big as a cat...", stats: { level: 1, ac: 11, saves: "D12 R13 H14 B15 S16", attacks: "Bite (+0, 1d4) or urine spray (+0, stench, range 10′)", speed: 30, morale: 7, xp: 15 } },
+                { name: "Yegril", hp: () => rollDice(4, 8), avgHp: 18, size: "L", description: "Gigantic, fluffy moose with luxuriant, purple fur...", stats: { level: 4, ac: 11, saves: "D10 R11 H12 B13 S14", attacks: "2 hooves (+3, 1d6)", speed: 40, morale: 6, xp: 80 } }
+            ],
+            "Swamp": [
+                { name: "Boar", hp: () => rollDice(3, 8), avgHp: 13, size: "M", description: "Omnivorous wild boars that dwell throughout Dolmenwood...", stats: { level: 3, ac: 12, saves: "D11 R12 H13 B14 S15", attacks: "Tusk (+2, 2d4)", speed: 50, morale: 9, xp: 40 } },
+                { name: "False Unicorn", hp: () => rollDice(2, 8), avgHp: 9, size: "M", description: "White-furred deer with a single horn in the center of the forehead...", stats: { level: 2, ac: 12, saves: "D12 R13 H14 B15 S16", attacks: "Horn (+1, 1d4)", speed: 80, morale: 6, xp: 20 } },
+                { name: "Gelatinous Ape", hp: () => rollDice(2, 8), avgHp: 9, size: "L", description: "Hairless, brightly coloured, transparent apes (3′ tall) that creep through the trees and undergrowth...", stats: { level: 2, ac: 11, saves: "D12 R13 H14 B15 S16", attacks: "Thrown branch (+1, 1d4)", speed: 50, morale: 7, xp: 20 } },
+                { name: "Gobble", hp: () => rollDice(1, 4), avgHp: 2, size: "S", description: "Fluffy, purple, arboreal primates about the size of a baby...", stats: { level: 1, ac: 13, saves: "D12 R13 H14 B15 S16", attacks: "Bite (+0, 1d3)", speed: 40, morale: 6, xp: 10 } },
+                { name: "Headhog", hp: () => rollDice(1, 4), avgHp: 2, size: "S", description: "Black-spined, flea-ridden hedgehogs with long, pink tongues...", stats: { level: 1, ac: 12, saves: "D12 R13 H14 B15 S16", attacks: "Bite (+0, 1d2)", speed: 30, morale: 6, xp: 10 } },
+                { name: "Honey Badger", hp: () => rollDice(1, 8), avgHp: 4, size: "S", description: "Squat, white-furred badgers that are slick with a honey-like substance...", stats: { level: 1, ac: 11, saves: "D12 R13 H14 B15 S16", attacks: "2 claws (+0, 1d3) and bite (+0, 1d3)", speed: 30, morale: 8, xp: 10 } },
+                { name: "Lurkey", hp: () => rollDice(1, 8), avgHp: 4, size: "S", description: "Ungainly ground birds with stiff, black feathers...", stats: { level: 1, ac: 12, saves: "D12 R13 H14 B15 S16", attacks: "Bite (+0, 1d2)", speed: 40, morale: 7, xp: 10 } },
+                { name: "Merriman", hp: () => rollDice(1, 8), avgHp: 4, size: "S", description: "Miniature, golden swine with unsightly, curly tusks...", stats: { level: 1, ac: 13, saves: "D12 R13 H14 B15 S16", attacks: "Tusk (+0, 1d4)", speed: 40, morale: 7, xp: 10 } },
+                { name: "Moss Mole", hp: () => rollDice(1, 4), avgHp: 2, size: "S", description: "Surface-dwelling moles as large as cats...", stats: { level: 1, ac: 10, saves: "D12 R13 H14 B15 S16", attacks: "Bite (+0, 1d2)", speed: 20, morale: 6, xp: 10 } },
+                { name: "Puggle", hp: () => rollDice(1, 8), avgHp: 4, size: "S", description: "Little, silver-furred, flat-faced dogs...", stats: { level: 1, ac: 13, saves: "D12 R13 H14 B15 S16", attacks: "Bite (+0, 1d4)", speed: 50, morale: 9, xp: 10 } },
+                { name: "Red Deer", hp: () => rollDice(3, 8), avgHp: 13, size: "L", description: "Elegant, red-furred deer with dappled flanks...", stats: { level: 3, ac: 12, saves: "D11 R12 H13 B14 S15", attacks: "Antlers (+2, 1d6) or stampede (+2, 1d20)", speed: 80, morale: 5, xp: 65 } },
+                { name: "Swamp Sloth", hp: () => rollDice(1, 8), avgHp: 4, size: "S", description: "Found primarily in the boggy regions of Dolmenwood...", stats: { level: 1, ac: 10, saves: "D12 R13 H14 B15 S16", attacks: "Claw (+0, 1d3)", speed: 10, morale: 6, xp: 10 } },
+                { name: "Trotteling", hp: () => rollDice(1, 8), avgHp: 4, size: "S", description: "Naked, miniature pigs with pinkish brown skin...", stats: { level: 1, ac: 12, saves: "D12 R13 H14 B15 S16", attacks: "Tusk (+0, 1d4)", speed: 40, morale: 8, xp: 10 } },
+                { name: "Woad", hp: () => rollDice(1, 8), avgHp: 4, size: "S", description: "Great, warty toads as big as a cat...", stats: { level: 1, ac: 11, saves: "D12 R13 H14 B15 S16", attacks: "Bite (+0, 1d4) or urine spray (+0, stench, range 10′)", speed: 30, morale: 7, xp: 15 } },
+                { name: "Yegril", hp: () => rollDice(4, 8), avgHp: 18, size: "L", description: "Gigantic, fluffy moose with luxuriant, purple fur...", stats: { level: 4, ac: 11, saves: "D10 R11 H12 B13 S14", attacks: "2 hooves (+3, 1d6)", speed: 40, morale: 6, xp: 80 } }
+            ]
+        };
+
+        function calculateRations(animal) {
+            const hp = animal.hp(); // Get the actual rolled HP
+            let rationsPerHp;
+            switch (animal.size) {
+                case "S": rationsPerHp = 1; break;
+                case "M": rationsPerHp = 2; break;
+                case "L": rationsPerHp = 4; break;
+                default: rationsPerHp = 1; // Fallback
+            }
+            return hp * rationsPerHp;
+        }
+
+        // --- Foraging Logic ---
+        document.getElementById('generateForagingBtn').addEventListener('click', () => {
+            const survivalCheckTarget = parseInt(document.getElementById('foragingSurvivalTarget').value);
+            const devoteFullDay = document.getElementById('foragingDevoteFullDay').checked;
+
+            let survivalRoll = rollDice(1, 20);
+            let effectiveRoll = survivalRoll;
+
+            if (devoteFullDay) {
+                effectiveRoll += 2;
+            }
+
+            const resultsDiv = document.getElementById('foragingResults');
+            const survivalRollEl = document.getElementById('foragingSurvivalRoll');
+            const foragingOutcomeEl = document.getElementById('foragingOutcome');
+            const foodTypeEl = document.getElementById('foragingFoodType');
+            const rationsEl = document.getElementById('foragingRations');
+
+            resultsDiv.classList.remove('hidden');
+            foodTypeEl.textContent = '';
+            rationsEl.textContent = '';
+
+            survivalRollEl.textContent = `Survival Check Roll: ${survivalRoll} (Effective: ${effectiveRoll})`;
+
+            if (effectiveRoll >= survivalCheckTarget) {
+                foragingOutcomeEl.textContent = "Outcome: Success! You found edible wild plants or fungi.";
+
+                const foodCategoryRoll = rollDice(1, 6);
+                let selectedFood = null;
+                let categoryName = "";
+
+                if (foodCategoryRoll >= 1 && foodCategoryRoll <= 3) { // Fungi
+                    categoryName = "Fungi";
+                    const foodIndex = rollDice(1, 20) - 1;
+                    selectedFood = edibleFungi[foodIndex];
+                } else { // Plants
+                    categoryName = "Plants";
+                    const foodIndex = rollDice(1, 20) - 1;
+                    selectedFood = ediblePlants[foodIndex];
+                }
+
+                const rationsFound = rollDice(1, 6);
+
+                foodTypeEl.innerHTML = `Found: <span class="font-bold">${selectedFood.name}</span> (${categoryName})<br><span class="text-sm italic">${selectedFood.description}</span>`;
+                rationsEl.textContent = `Rations: ${rationsFound} fresh rations.`;
+
+            } else {
+                foragingOutcomeEl.textContent = "Outcome: Failure. You did not find any edible food.";
+            }
+        });
+
+        // --- Fishing Logic ---
+        document.getElementById('generateFishingBtn').addEventListener('click', () => {
+            const survivalCheckTarget = parseInt(document.getElementById('fishingSurvivalTarget').value);
+            const devoteFullDay = document.getElementById('fishingDevoteFullDay').checked;
+
+            let survivalRoll = rollDice(1, 20);
+            let effectiveRoll = survivalRoll;
+
+            if (devoteFullDay) {
+                effectiveRoll += 2;
+            }
+
+            const resultsDiv = document.getElementById('fishingResults');
+            const survivalRollEl = document.getElementById('fishingSurvivalRoll');
+            const fishingOutcomeEl = document.getElementById('fishingOutcome');
+            const catchTypeEl = document.getElementById('fishingCatchType');
+            const rationsEl = document.getElementById('fishingRations');
+
+            resultsDiv.classList.remove('hidden');
+            catchTypeEl.textContent = '';
+            rationsEl.textContent = '';
+
+            survivalRollEl.textContent = `Survival Check Roll: ${survivalRoll} (Effective: ${effectiveRoll})`;
+
+            if (effectiveRoll >= survivalCheckTarget) {
+                fishingOutcomeEl.textContent = "Outcome: Success! You caught something.";
+
+                const fishIndex = rollDice(1, 20) - 1;
+                const selectedFish = edibleFish[fishIndex];
+                const rationsFound = rollDice(2, 6);
+
+                catchTypeEl.innerHTML = `Caught: <span class="font-bold">${selectedFish.name}</span><br><span class="text-sm italic">${selectedFish.description}</span>`;
+                rationsEl.textContent = `Rations: ${rationsFound} fresh rations.`;
+            } else {
+                fishingOutcomeEl.textContent = "Outcome: Failure. You didn't catch anything.";
+            }
+        });
+
+        // --- Hunting Logic ---
+        document.getElementById('generateHuntingBtn').addEventListener('click', () => {
+            const survivalCheckTarget = parseInt(document.getElementById('huntingSurvivalTarget').value);
+            const devoteFullDay = document.getElementById('huntingDevoteFullDay').checked;
+            const selectedTerrain = document.getElementById('huntingTerrain').value;
+
+            let survivalRoll = rollDice(1, 20);
+            let effectiveRoll = survivalRoll;
+
+            if (devoteFullDay) {
+                effectiveRoll += 2;
+            }
+
+            const resultsDiv = document.getElementById('huntingResults');
+            const survivalRollEl = document.getElementById('huntingSurvivalRoll');
+            const huntingOutcomeEl = document.getElementById('huntingOutcome');
+            const animalTypeEl = document.getElementById('huntingAnimalType');
+            const animalDescriptionEl = document.getElementById('huntingAnimalDescription');
+            const animalStatsEl = document.getElementById('huntingAnimalStats');
+            const rationsEl = document.getElementById('huntingRations');
+
+            resultsDiv.classList.remove('hidden');
+            animalTypeEl.textContent = '';
+            animalDescriptionEl.textContent = '';
+            animalStatsEl.innerHTML = '';
+            rationsEl.textContent = '';
+
+            survivalRollEl.textContent = `Survival Check Roll: ${survivalRoll} (Effective: ${effectiveRoll})`;
+
+            if (effectiveRoll >= survivalCheckTarget) {
+                huntingOutcomeEl.textContent = "Outcome: Success! You crept up on game animals.";
+
+                const animalsInTerrain = gameAnimals[selectedTerrain];
+                if (animalsInTerrain && animalsInTerrain.length > 0) {
+                    const animalIndex = rollDice(1, animalsInTerrain.length) - 1;
+                    const selectedAnimal = animalsInTerrain[animalIndex];
+                    const rationsFound = calculateRations(selectedAnimal);
+
+                    animalTypeEl.innerHTML = `Found: <span class="font-bold">${selectedAnimal.name}</span> (Size: ${selectedAnimal.size})`;
+                    animalDescriptionEl.textContent = selectedAnimal.description;
+
+                    // Display detailed stats
+                    animalStatsEl.innerHTML = `
+                        <p><strong>Level:</strong> ${selectedAnimal.stats.level}</p>
+                        <p><strong>AC:</strong> ${selectedAnimal.stats.ac}</p>
+                        <p><strong>HP:</strong> ${selectedAnimal.hp().toFixed(0)} (Avg: ${selectedAnimal.avgHp})</p>
+                        <p><strong>Saves:</strong> ${selectedAnimal.stats.saves}</p>
+                        <p><strong>Attacks:</strong> ${selectedAnimal.stats.attacks}</p>
+                        <p><strong>Speed:</strong> ${selectedAnimal.stats.speed}</p>
+                        <p><strong>Morale:</strong> ${selectedAnimal.stats.morale}</p>
+                        <p><strong>XP:</strong> ${selectedAnimal.stats.xp}</p>
+                    `;
+                    rationsEl.textContent = `Rations: ${rationsFound} fresh rations.`;
+                } else {
+                    animalTypeEl.textContent = "No specific game animals listed for this terrain type.";
+                    animalDescriptionEl.textContent = "";
+                    animalStatsEl.innerHTML = "";
+                    rationsEl.textContent = "";
+                }
+            } else {
+                huntingOutcomeEl.textContent = "Outcome: Failure. You failed to creep up on any game animals.";
+            }
+        });
+    </script>
+</body>
+</html>
