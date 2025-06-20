@@ -137,10 +137,53 @@
             };
 
             const locations = ['Prigwort', 'Lankshorn', 'Castle Brackenwold', 'Dreg', 'the High Wold', 'Hag\'s Addle', 'Fort Vulgar', 'the shores of Lake Longmere', 'a quiet village in the Tithelands', 'a damp burrow in Mulchgrove'];
-            const factions = ['the Drune', 'the Pluritine Church', 'House Harrowmoor', 'a minor noble family', 'the thieves\' guild in Dreg', 'the Brewmasters of Prigwort'];
+            const factions = ['the Drune', 'the Pluritine Church', 'House Harrowmoor', 'a minor noble family', 'the thieves\' guild in Dreg', 'the Brewmasters of Prigwort', 'the Cold-Pickers', 'the Nag-Lord'];
 
-            const backgroundTemplates = [ `Originally from {location}, this person moved to seek their fortune.`, `Grew up hearing fearful tales of {faction} and avoids them at all costs.`, `Once served a {faction}, but left after a disagreement over pay.`, `A devout follower of the Pluritine Church, they make regular pilgrimages.`, `Has family in {location}, but hasn't seen them in years.`, `Claims to have seen a fairy door near {location}.`, `Lost a sibling in the tangled woods near {location} and is haunted by the memory.`, `Works as a simple {background} but dreams of a life of adventure.`, `Is secretly in debt to {faction} and is looking for a way out.` ];
-            const desireTemplates = [ `To earn enough coin to travel to the great city of {location}.`, `To find an arcane secret to gain leverage over {faction}.`, `To join {faction} for protection and status.`, `To find a lost family heirloom, last seen near {location}.`, `Wants nothing more than a quiet life as a {background}.`, `Seeks a rare herb from the deep woods to cure an ailment.`, `Desires to avenge a wrong committed against their family by a member of {faction}.`, `Hopes to one day own a small plot of land near {location}.` ];
+            const backgroundTemplates = [
+                `Originally from {location}, this person moved to seek their fortune, but found only hardship.`,
+                `Grew up hearing fearful tales of {faction} and now actively works against them in secret.`,
+                `Once served a member of {faction}, but fled after discovering a terrible secret.`,
+                `A devout follower of the Pluritine Church, they are on a pilgrimage to {location} to atone for a past sin.`,
+                `Has family working in the silver mines of {location}, and sends them most of their earnings.`,
+                `Claims to have seen a fairy door near {location} and is obsessed with finding it again.`,
+                `Lost a sibling in the tangled woods near {location} and now leads search parties for other lost folk.`,
+                `Works as a simple {background}, but is a talented musician who dreams of playing for the Duke.`,
+                `Is secretly in debt to a member of {faction} and is performing unsavory tasks to pay it off.`,
+                `Hails from the bustling city of Castle Brackenwold, and finds the quiet of the woods unnerving and suspicious.`,
+                `Grew up in the river-port of Prigwort, with a healthy respect for the river and a deep-seated fear of what lurks in its depths.`,
+                `Worked the docks in Lankshorn and has heard many strange tales from sailors who've traversed Lake Longmere, believing half of them.`,
+                `Is a refugee from a village that was mysteriously abandoned overnight, and is seeking answers while haunted by nightmares.`,
+                `Once served in the garrison at Fort Vulgar, and is hardened by the constant threat of goblin raids from the north.`,
+                `Carries an iron nail at all times for protection, after a terrifying childhood encounter with a grimalkin.`,
+                `Once got hopelessly lost in the woods and was led to safety by the sound of a mysterious, unseen piper, whose tune still haunts them.`,
+                `Swears they saw a village of tiny, turnip-headed folk in a field and is convinced they weren't dreaming, often returning to the spot.`,
+                `Forages for rare fungi in the deep woods, selling their valuable finds to alchemists and wizards in {location}.`,
+                `Is on the run after witnessing a crime committed by a powerful merchant in {location}.`,
+                `Is searching for a lost love who wandered into the woods during a full moon and never returned.`,
+                `Inherited a cryptic map from a dying relative that supposedly leads to a hidden treasure within Dolmenwood.`,
+                `Believes they are afflicted by a family curse that causes minor misfortunes to befall them and those around them.`
+            ];
+
+            const desireTemplates = [
+                `To earn enough coin to buy passage away from Dolmenwood and start a new life in a distant city.`,
+                `To find an arcane secret, not for power, but to understand the strange happenings in the woods.`,
+                `To join {faction} for protection, believing it's the only way to survive in this harsh land.`,
+                `To find a lost family heirloom, a silver locket said to ward off fairy mischief.`,
+                `Wants nothing more than a quiet life as a {background}, far from the woods and its influence.`,
+                `Seeks a rare herb from the deep woods, the Moonpetal, said to bloom only in the light of a full moon.`,
+                `Desires to avenge a wrong committed against their family by a member of {faction}, but lacks the courage to act.`,
+                `Hopes to one day own a small, fortified croft near {location}, safe from the woods' dangers.`,
+                `To discover the true nature of the Drune, wondering if they are guardians or corrupters of the wood.`,
+                `To expose a corrupt official in {location} who is secretly in league with {faction}.`,
+                `Wishes to brew an ale so fine it would be served in the halls of Duke Sovay himself.`,
+                `To map a safe path through a notoriously dangerous part of the forest near {location}.`,
+                `To learn the language of the Mosslings, believing they hold ancient secrets.`,
+                `Seeks to capture a Yickerwill to learn the truth of its prophetic riddles.`,
+                `Wants to find a way to break a pact a foolish ancestor made with a powerful fairy.`,
+                `Hopes to find a font of pure, untainted water to bring back to their blighted village.`,
+                `Desires to become the finest {background} in all of Dolmenwood, known for their skill and honesty.`,
+                `To locate the lost shrine of a forgotten saint, believing it holds the key to their salvation.`
+            ];
             
             const everydayMortalBackgrounds = { 'Angler': ['fisherman', 'river-folk', 'bait-digger'], 'Crier': ['town announcer', 'herald\'s assistant', 'news-runner'], 'Fortune-Teller': ['card-reader', 'bone-thrower', 'star-gazer'], 'Lost Soul': ['amnesiac wanderer', 'escaped captive', 'cursed traveler'], 'Merchant': ['wool trader', 'ale merchant', 'purveyor of fine goods'], 'Pedlar': ['tinker', 'wandering seller', 'trinket-dealer'], 'Pilgrim': ['shrine-seeker', 'religious wanderer', 'penitent soul'], 'Priest': ['local vicar', 'abbey scribe', 'church warden'], 'Villager': ['farmer', 'woodcutter', 'baker', 'butcher', 'swineherd', 'cooper'] };
 
@@ -150,7 +193,7 @@
             const lostSoulHome = ["Castle Brackenwold (Hex 1508)", "Dreg (Hex 1110)", "Drigbolton (Hex 0702)", "Fort Vulgar (Hex 0604)", "Lankshorn (Hex 0710)", "Meagre’s Reach (Hex 1703)", "Odd (Hex 1403)", "Prigwort (Hex 1106)", "Woodcutters’ Encampment (Hex 1109)", "A servant at Bogwitt Manor, Harrowmoor Keep, or Nodding Castle"];
             const pilgrimDestinations = ["Church of St Pastery (Lankshorn)", "Church of St Waylaine (Prigwort)", "A lost shrine (in the correct location)", "A lost shrine (in an incorrect location)", "The Cathedral of St Signis (Castle Brackenwold)", "Three Martyrs Minster (High-Hankle)"];
             const priestFunctions = ["Administrator", "Alms collector", "Cantor", "Confessor", "Evangelist", "Herbalist", "Lichward", "Mendicant", "Preacher", "Scholar", "Scribe", "Tithe collector"];
-            const villagerActivities = ["Calling for a lost child.", "Chasing errant swine.", "Collecting eggs.", "Cutting wood.", "Fetching water.", "Foraging.", "Hanging corn dollies.", "Hunting fowl.", "Masked capering.", "Praying to a saint.", "Trysting.", "Whittling."];
+            const villagerActivities = ["Calling for a lost child.", "Chasing errant swine.", "Collecting eggs.", "Cutting wood.", "Fetching water.", "Foraging for mushrooms.", "Hanging corn dollies on a doorway.", "Hunting fowl with a sling.", "Engaged in masked capering.", "Praying to a local saint.", "In a secret tryst behind a barn.", "Whittling a small wooden bird.", "Mending a crooked fence.", "Arguing with a neighbor about a wandering goat.", "Leaving a saucer of milk on their doorstep for the fey.", "Gathering fallen branches for firewood.", "Returning from the market in a nearby town.", "Sharpening a rusty sickle.", "Weaving a basket from river reeds.", "Telling children a cautionary tale about the Nag-Lord.", "Staring intently into the woods, listening.", "Singing a jaunty, but slightly morbid, local folk song.", "Checking snares at the edge of their property.", "Napping in the sun against a hay bale."];
             
             const typeSelect = document.getElementById('npc-type');
             const kindredSelect = document.getElementById('npc-kindred');
@@ -183,13 +226,13 @@
             function generateBackground(npcType) {
                 let template = getRandom(backgroundTemplates);
                 const backgroundKeyword = getRandom(everydayMortalBackgrounds[npcType] || everydayMortalBackgrounds['Villager']);
-                return template.replace('{location}', getRandom(locations)).replace('{faction}', getRandom(factions)).replace('{background}', backgroundKeyword);
+                return template.replace(/{location}/g, getRandom(locations)).replace(/{faction}/g, getRandom(factions)).replace(/{background}/g, backgroundKeyword);
             }
 
             function generateDesire(npcType) {
                 let template = getRandom(desireTemplates);
                 const backgroundKeyword = getRandom(everydayMortalBackgrounds[npcType] || everydayMortalBackgrounds['Villager']);
-                return template.replace('{location}', getRandom(locations)).replace('{faction}', getRandom(factions)).replace('{background}', backgroundKeyword);
+                return template.replace(/{location}/g, getRandom(locations)).replace(/{faction}/g, getRandom(factions)).replace(/{background}/g, backgroundKeyword);
             }
 
             function generateProfessionDetails(npcType) {
