@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dolmenwood NPC Generator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;700&family=Merriweather:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Lora', serif;
+            background-color: #1a202c;
+            color: #e2e8f0;
+        }
+        .dolmenwood-title {
+            font-family: 'Merriweather', serif;
+            font-weight: 700;
+        }
+        .dolmenwood-card {
+            background-color: #2d3748;
+            border: 1px solid #4a5568;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        .dolmenwood-btn {
+            background-color: #4a5568;
+            transition: background-color 0.3s ease;
+        }
+        .dolmenwood-btn:hover {
+            background-color: #5a6678;
+        }
+        .dolmenwood-select {
+            background-color: #2d3748;
+            border: 1px solid #4a5568;
+        }
+        .history-item {
+            border-left: 4px solid #4a5568;
+            transition: background-color 0.2s ease;
+        }
+        .history-item:hover {
+             background-color: #4a5568;
+        }
+        /* Custom scrollbar for a more thematic feel */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #2d3748;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #718096;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #a0aec0;
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <div class="container mx-auto p-4 md:p-8">
+        <header class="text-center mb-8">
+            <h1 class="text-4xl md:text-5xl dolmenwood-title text-emerald-300">Dolmenwood NPC Generator</h1>
+            <p class="text-lg text-slate-400 mt-2">Generate everyday mortals from the tangled woods.</p>
+        </header>
+
+        <main class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Control Panel -->
+            <div class="lg:col-span-1">
+                <div class="dolmenwood-card rounded-lg p-6 sticky top-8">
+                    <h2 class="text-2xl font-bold mb-4 text-emerald-400">Controls</h2>
+                    <div class="space-y-4">
+                        <div>
+                            <label for="npc-type" class="block mb-2 text-sm font-medium text-slate-300">NPC Type</label>
+                            <select id="npc-type" class="dolmenwood-select w-full p-2.5 rounded-lg focus:ring-emerald-500 focus:border-emerald-500">
+                                <!-- Options will be populated by JavaScript -->
+                            </select>
+                        </div>
+                        <button id="generate-btn" class="dolmenwood-btn w-full text-white font-bold py-3 px-4 rounded-lg shadow-lg">
+                            Generate NPC
+                        </button>
+                    </div>
+
+                    <!-- Current NPC Result -->
+                    <div id="npc-result" class="mt-8">
+                        <!-- Generated NPC details will be displayed here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- History Panel -->
+            <div class="lg:col-span-2">
+                <div class="dolmenwood-card rounded-lg p-6">
+                    <h2 class="text-2xl font-bold mb-4 text-emerald-400">History</h2>
+                    <div id="history-log" class="space-y-4 max-h-[80vh] overflow-y-auto pr-2">
+                        <p class="text-slate-500 italic">No NPCs generated yet. Click the button to begin!</p>
+                        <!-- History of generated NPCs will be logged here -->
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- DATA ---
+            const npcTypes = ['Any', 'Angler', 'Crier', 'Fortune-Teller', 'Lost Soul', 'Merchant', 'Pedlar', 'Pilgrim', 'Priest', 'Villager'];
+
+            const humanNames = {
+                male: ['Arfred', 'Brom', 'Bunk', 'Chydewick', 'Crump', 'Dimothy', 'Guillem', 'Henrick', 'Hogrid', 'Jappser', 'Joremey', 'Josprey', 'Jymes', 'Mollequip', 'Rodger', 'Rogbert', 'Samwise', 'Shadwell', 'Shank', 'Sidley'],
+                female: ['Agnel', 'Amonie', 'Celenia', 'Emelda', 'Gertwinne', 'Gilly', 'Gretchen', 'Hilda', 'Illabell', 'Katerynne', 'Lillibeth', 'Lillith', 'Lisabeth', 'Mabel', 'Maydrid', 'Melysse', 'Molly', 'Pansy', 'Roese', 'Wilhemina'],
+                surname: ['Addercapper', 'Burl', 'Candleswick', 'Crumwaller', 'Dogoode', 'Dregger', 'Dunwallow', 'Fraggleton', 'Gruewater', 'Harper', 'Lank', 'Logueweave', 'Loomer', 'Malksmilk', 'Smith', 'Sunderman', 'Swinney', 'Tolmen', 'Weavilman', 'Wolder']
+            };
+
+            const breggleNames = {
+                 male: ['Aele', 'Braembel', 'Broob', 'Crump', 'Drerdl', 'Frennig', 'Grerg', 'Gripe', 'Llerg', 'Llrod', 'Lope', 'Mashker', 'Olledg', 'Rheg', 'Shadgore', 'Shadwell', 'Shadwicke', 'Shandor', 'Shank', 'Snerd'],
+                female: ['Aedel', 'Berrild', 'Bredhr', 'Draed', 'Fannigrew', 'Frandorup', 'Grendilore', 'Grendl', 'Grewigg', 'Hildrup', 'Hraigl', 'Hwendl', 'Maybel', 'Myrkle', 'Nannigrew', 'Pettigrew', 'Rrhimbr', 'Shord', 'Smethra', 'Wheld'],
+                surname: ['Blathergripe', 'Bluegouge', 'Bockbrugh', 'Bockstump', 'Elbowgen', 'Forlocke', 'Hwodlow', 'Lankshorn', 'Lockehorn', 'Longbeard', 'Longshanks', 'Shankwold', 'Smallbuck', 'Snicklebock', 'Snidebleat', 'Snoode', 'Underbleat', 'Underbuck', 'Wolder', 'Woldleap']
+            };
+            
+            const basicDetails = {
+                sex: ['Female', 'Male'], // Corrected to have a 50/50 chance
+                age: ['Child', 'Youth', 'Adult', 'Mature', 'Old', 'Decrepit'],
+                dress: ['Drab', 'Elaborate', 'Formal', 'Messy', 'Pristine', 'Scant', 'Tatty', 'Uniform'],
+                feature: ['Bald', 'Beautiful', 'Hairy', 'Lost limb', 'Muscular', 'Obese', 'Scrawny', 'Short', 'Tall', 'Ugly'],
+                kindred: ['Breggle', 'Breggle', 'Breggle', 'Human', 'Human', 'Human', 'Human', 'Human', 'Human', 'Human', 'Mossling', 'Mossling']
+            };
+
+            const locations = ['Prigwort', 'Lankshorn', 'Castle Brackenwold', 'Dreg', 'the High Wold', 'Hag\'s Addle', 'Fort Vulgar', 'the shores of Lake Longmere', 'a quiet village in the Tithelands', 'a damp burrow in Mulchgrove'];
+            const factions = ['the Drune', 'the Pluritine Church', 'House Harrowmoor', 'a minor noble family', 'the thieves\' guild in Dreg', 'the Brewmasters of Prigwort'];
+
+            const backgroundTemplates = [ `Originally from {location}, this person moved to seek their fortune.`, `Grew up hearing fearful tales of {faction} and avoids them at all costs.`, `Once served a {faction}, but left after a disagreement over pay.`, `A devout follower of the Pluritine Church, they make regular pilgrimages.`, `Has family in {location}, but hasn't seen them in years.`, `Claims to have seen a fairy door near {location}.`, `Lost a sibling in the tangled woods near {location} and is haunted by the memory.`, `Works as a simple {background} but dreams of a life of adventure.`, `Is secretly in debt to {faction} and is looking for a way out.` ];
+            const desireTemplates = [ `To earn enough coin to travel to the great city of {location}.`, `To find an arcane secret to gain leverage over {faction}.`, `To join {faction} for protection and status.`, `To find a lost family heirloom, last seen near {location}.`, `Wants nothing more than a quiet life as a {background}.`, `Seeks a rare herb from the deep woods to cure an ailment.`, `Desires to avenge a wrong committed against their family by a member of {faction}.`, `Hopes to one day own a small plot of land near {location}.` ];
+            
+            const everydayMortalBackgrounds = { 'Angler': ['fisherman', 'river-folk', 'bait-digger'], 'Crier': ['town announcer', 'herald\'s assistant', 'news-runner'], 'Fortune-Teller': ['card-reader', 'bone-thrower', 'star-gazer'], 'Lost Soul': ['amnesiac wanderer', 'escaped captive', 'cursed traveler'], 'Merchant': ['wool trader', 'ale merchant', 'purveyor of fine goods'], 'Pedlar': ['tinker', 'wandering seller', 'trinket-dealer'], 'Pilgrim': ['shrine-seeker', 'religious wanderer', 'penitent soul'], 'Priest': ['local vicar', 'abbey scribe', 'church warden'], 'Villager': ['farmer', 'woodcutter', 'baker', 'butcher', 'swineherd', 'cooper'] };
+
+            const crierNews = ["25% taxation of the mercantile and adventuring classes.", "A noble is missing, 2,000gp reward.", "Berryld Ramius to wed the victor of Ramius’ tourney.", "Lady Zoemina (duke’s daughter) to marry Lord Ramius.", "Strong youths to be trained for impending war.", "Upcoming 2 week religious festival, travel banned."];
+            const fortuneTellingMethod = ["Astrology", "Card reading", "Casting bones", "Crystal ball", "Fire gazing", "Ley line dowsing", "Melting wax", "Oracular vision", "Palm reading", "Sparrow entrails", "Spirit board", "Tea leaves"];
+            const lostSoulFate = ["Escaped from the realms of the dead.", "Kidnapped by fairies as a child, recently expelled.", "Lost in the wilds, starving and ragged.", "Slept for 1d100 years, recently awoke.", "Teleported by ley line discharge, now lost.", "Wandered in Fairy for 2d100 years."];
+            const lostSoulHome = ["Castle Brackenwold (Hex 1508)", "Dreg (Hex 1110)", "Drigbolton (Hex 0702)", "Fort Vulgar (Hex 0604)", "Lankshorn (Hex 0710)", "Meagre’s Reach (Hex 1703)", "Odd (Hex 1403)", "Prigwort (Hex 1106)", "Woodcutters’ Encampment (Hex 1109)", "A servant at Bogwitt Manor, Harrowmoor Keep, or Nodding Castle"];
+            const pilgrimDestinations = ["Church of St Pastery (Lankshorn)", "Church of St Waylaine (Prigwort)", "A lost shrine (in the correct location)", "A lost shrine (in an incorrect location)", "The Cathedral of St Signis (Castle Brackenwold)", "Three Martyrs Minster (High-Hankle)"];
+            const priestFunctions = ["Administrator", "Alms collector", "Cantor", "Confessor", "Evangelist", "Herbalist", "Lichward", "Mendicant", "Preacher", "Scholar", "Scribe", "Tithe collector"];
+            const villagerActivities = ["Calling for a lost child.", "Chasing errant swine.", "Collecting eggs.", "Cutting wood.", "Fetching water.", "Foraging.", "Hanging corn dollies.", "Hunting fowl.", "Masked capering.", "Praying to a saint.", "Trysting.", "Whittling."];
+            
+            const typeSelect = document.getElementById('npc-type');
+            const generateBtn = document.getElementById('generate-btn');
+            const resultDiv = document.getElementById('npc-result');
+            const historyLog = document.getElementById('history-log');
+
+            const getRandom = (arr) => arr[Math.floor(Math.random() * arr.length)];
+            const d6 = () => Math.floor(Math.random() * 6) + 1;
+            const d100 = () => Math.floor(Math.random() * 100) + 1;
+
+            function populateSelect() {
+                npcTypes.forEach(type => {
+                    const option = document.createElement('option');
+                    option.value = type;
+                    option.textContent = type;
+                    typeSelect.appendChild(option);
+                });
+            }
+
+            function generateName(kindred, sex) {
+                if (kindred === 'Mossling') return "A Mossling (Nameless)";
+                
+                let names = (kindred === 'Breggle') ? breggleNames : humanNames;
+                const firstName = (sex === 'Male') ? getRandom(names.male) : getRandom(names.female);
+                const lastName = getRandom(names.surname);
+                return `${firstName} ${lastName}`;
+            }
+            
+            function generateBackground(npcType) {
+                let template = getRandom(backgroundTemplates);
+                const backgroundKeyword = getRandom(everydayMortalBackgrounds[npcType] || everydayMortalBackgrounds['Villager']);
+                return template.replace('{location}', getRandom(locations)).replace('{faction}', getRandom(factions)).replace('{background}', backgroundKeyword);
+            }
+
+            function generateDesire(npcType) {
+                let template = getRandom(desireTemplates);
+                const backgroundKeyword = getRandom(everydayMortalBackgrounds[npcType] || everydayMortalBackgrounds['Villager']);
+                return template.replace('{location}', getRandom(locations)).replace('{faction}', getRandom(factions)).replace('{background}', backgroundKeyword);
+            }
+
+            function generateProfessionDetails(npcType) {
+                let label = "Note";
+                let detail = "This humble pedlar offers mundane goods from a wicker basket.";
+
+                switch (npcType) {
+                    case 'Angler':
+                        label = "Rations";
+                        detail = d6() <= 3 ? `Carrying ${d6() + d6()} rations of fresh fish, willing to sell for 1gp each.` : "Has caught no fish today.";
+                        break;
+                    case 'Crier':
+                        label = "News";
+                        detail = getRandom(crierNews);
+                        break;
+                    case 'Fortune-Teller':
+                        label = "Fortune";
+                        const roll = d6();
+                        let result;
+                        if (roll <= 2) result = "Weal (a positive outcome).";
+                        else if (roll <= 4) result = "Woe (a negative outcome).";
+                        else result = "Truth (a cryptic message from the Referee).";
+                        detail = `Using the method of ${getRandom(fortuneTellingMethod)}, they predict: ${result}`;
+                        break;
+                    case 'Lost Soul':
+                        label = "Fate";
+                        detail = `${getRandom(lostSoulFate)} Their home was ${getRandom(lostSoulHome)}.`;
+                        break;
+                    case 'Merchant':
+                        label = "Wares & Guards";
+                        const wealthRoll = d6();
+                        const wealthMap = [
+                            { wealth: `${d100()}gp`, guards: "2 soldiers per wagon" },
+                            { wealth: `${d100() * 2}gp`, guards: "3 soldiers per wagon" },
+                            { wealth: `${d100() * 3}gp, 1 gem`, guards: "4 soldiers/wagon, 1 lieutenant/5 wagons" },
+                            { wealth: `${d100() * 4}gp, 1d3 gems`, guards: "5 soldiers/wagon, 2 lieutenants/5 wagons" },
+                            { wealth: `${d100() * 5}gp, 1d4 gems, 1 art object`, guards: "6 soldiers/wagon, 2 lieutenants/4 wagons, 1 captain" },
+                            { wealth: `${d100() * 6}gp, 2d4 gems, 1d4 art objects`, guards: "7 soldiers/wagon, 2 lieutenants/3 wagons, 1 captain" },
+                        ];
+                        detail = `Wealth of ${wealthMap[wealthRoll - 1].wealth} per wagon, protected by ${wealthMap[wealthRoll - 1].guards}.`;
+                        break;
+                    case 'Pilgrim':
+                        label = "Destination";
+                        detail = `Heading to ${getRandom(pilgrimDestinations)}.`;
+                        if (d6() <= 2) detail += " They are devout flagellants.";
+                        break;
+                    case 'Priest':
+                        label = "Function";
+                        detail = `A traveling ${getRandom(priestFunctions).toLowerCase()} of the Pluritine Church.`;
+                        break;
+                    case 'Villager':
+                        label = "Activity";
+                        detail = getRandom(villagerActivities);
+                        break;
+                }
+                return { label, detail };
+            }
+
+            function renderNpc(npc) {
+                resultDiv.innerHTML = `
+                    <div class="animate-fade-in space-y-3">
+                        <div>
+                            <h3 class="text-xl dolmenwood-title text-emerald-300">${npc.name}</h3>
+                            <p class="text-sm uppercase font-bold text-slate-400 tracking-wider">${npc.type}</p>
+                        </div>
+                        <p class="text-slate-300 italic text-sm">${npc.basicDetails}</p>
+                        <div class="text-slate-300 space-y-2 text-base">
+                            <p><strong>${npc.professionDetail.label}:</strong> ${npc.professionDetail.detail}</p>
+                            <p><strong>Background:</strong> ${npc.background}</p>
+                            <p><strong>Desire:</strong> ${npc.desire}</p>
+                        </div>
+                    </div>
+                `;
+            }
+
+            function logToHistory(npc) {
+                const placeholder = historyLog.querySelector('.italic');
+                if (placeholder) {
+                    placeholder.remove();
+                }
+
+                const historyItem = document.createElement('div');
+                historyItem.className = 'history-item p-4 rounded-lg dolmenwood-card';
+                historyItem.innerHTML = `
+                    <h4 class="font-bold text-lg text-emerald-400">${npc.name}</h4>
+                    <p class="text-xs uppercase font-bold text-slate-500 tracking-wider mb-2">${npc.type}</p>
+                    <p class="text-slate-400 italic text-xs mb-2">${npc.basicDetails}</p>
+                    <div class="text-sm text-slate-400 space-y-1">
+                        <p><strong>${npc.professionDetail.label}:</strong> ${npc.professionDetail.detail}</p>
+                        <p><strong>Background:</strong> ${npc.background}</p>
+                        <p><strong>Desire:</strong> ${npc.desire}</p>
+                    </div>
+                `;
+                historyLog.prepend(historyItem);
+            }
+
+            function handleGenerate() {
+                let selectedType = typeSelect.value;
+                if (selectedType === 'Any') {
+                    selectedType = getRandom(npcTypes.filter(t => t !== 'Any'));
+                }
+                
+                const details = {
+                    sex: getRandom(basicDetails.sex),
+                    age: getRandom(basicDetails.age),
+                    dress: getRandom(basicDetails.dress),
+                    feature: getRandom(basicDetails.feature),
+                    kindred: getRandom(basicDetails.kindred)
+                };
+
+                const npc = {
+                    name: generateName(details.kindred, details.sex),
+                    type: selectedType,
+                    basicDetails: `${details.age} ${details.kindred} ${details.sex}, with a ${details.feature.toLowerCase()} feature, dressed in ${details.dress.toLowerCase()} clothes.`,
+                    background: generateBackground(selectedType),
+                    desire: generateDesire(selectedType),
+                    professionDetail: generateProfessionDetails(selectedType),
+                };
+
+                renderNpc(npc);
+                logToHistory(npc);
+            }
+
+            // --- INITIALIZATION ---
+            populateSelect();
+            generateBtn.addEventListener('click', handleGenerate);
+        });
+    </script>
+</body>
+</html>
