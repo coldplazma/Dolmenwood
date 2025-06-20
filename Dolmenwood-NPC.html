@@ -77,6 +77,15 @@
                                 <!-- Options will be populated by JavaScript -->
                             </select>
                         </div>
+                        <div>
+                            <label for="npc-kindred" class="block mb-2 text-sm font-medium text-slate-300">Kindred</label>
+                            <select id="npc-kindred" class="dolmenwood-select w-full p-2.5 rounded-lg focus:ring-emerald-500 focus:border-emerald-500">
+                                <option>Any</option>
+                                <option>Human</option>
+                                <option>Breggle</option>
+                                <option>Mossling</option>
+                            </select>
+                        </div>
                         <button id="generate-btn" class="dolmenwood-btn w-full text-white font-bold py-3 px-4 rounded-lg shadow-lg">
                             Generate NPC
                         </button>
@@ -120,7 +129,7 @@
             };
             
             const basicDetails = {
-                sex: ['Female', 'Male'], // Corrected to have a 50/50 chance
+                sex: ['Female', 'Male'],
                 age: ['Child', 'Youth', 'Adult', 'Mature', 'Old', 'Decrepit'],
                 dress: ['Drab', 'Elaborate', 'Formal', 'Messy', 'Pristine', 'Scant', 'Tatty', 'Uniform'],
                 feature: ['Bald', 'Beautiful', 'Hairy', 'Lost limb', 'Muscular', 'Obese', 'Scrawny', 'Short', 'Tall', 'Ugly'],
@@ -144,6 +153,7 @@
             const villagerActivities = ["Calling for a lost child.", "Chasing errant swine.", "Collecting eggs.", "Cutting wood.", "Fetching water.", "Foraging.", "Hanging corn dollies.", "Hunting fowl.", "Masked capering.", "Praying to a saint.", "Trysting.", "Whittling."];
             
             const typeSelect = document.getElementById('npc-type');
+            const kindredSelect = document.getElementById('npc-kindred');
             const generateBtn = document.getElementById('generate-btn');
             const resultDiv = document.getElementById('npc-result');
             const historyLog = document.getElementById('history-log');
@@ -282,12 +292,14 @@
                     selectedType = getRandom(npcTypes.filter(t => t !== 'Any'));
                 }
                 
+                let selectedKindred = kindredSelect.value;
+
                 const details = {
                     sex: getRandom(basicDetails.sex),
                     age: getRandom(basicDetails.age),
                     dress: getRandom(basicDetails.dress),
                     feature: getRandom(basicDetails.feature),
-                    kindred: getRandom(basicDetails.kindred)
+                    kindred: (selectedKindred === 'Any') ? getRandom(basicDetails.kindred) : selectedKindred
                 };
 
                 const npc = {
